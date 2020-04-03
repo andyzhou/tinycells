@@ -1,0 +1,23 @@
+syntax="proto3";
+package rpc;
+
+
+//message for packet
+message Packet {
+	int32 kind = 1;//1:request 2:response
+	int64 playerId = 2;//owner id
+	int64 dataId = 3;//key data id
+	string json = 4;//json string
+	bool bRet = 5;
+	int32 errCode = 6;
+}
+
+//define service
+service PacketService {
+    //packet request, use stream mode 
+    rpc StreamReq(stream Packet) returns (stream Packet);
+
+	//generate request
+	rpc SendReq(Packet) returns (Packet);
+}
+
