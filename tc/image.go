@@ -27,6 +27,7 @@ import (
  const (
  	ImgResize = "resize"
  	ImgCropToSize = "cropToSize"
+ 	ImgSigmoid = "sigmoid"
  )
 
  //inter default value
@@ -49,7 +50,11 @@ import (
  }
 
  //construct
-func NewImageResize(scaleWidth, cropHeight int, tempPath string, needCrop bool) *ImageResize {
+func NewImageResize(
+			scaleWidth, cropHeight int,
+			tempPath string,
+			needCrop bool,
+		) *ImageResize {
 	var (
 		filters = make(map[string]gift.Filter)
 	)
@@ -65,8 +70,11 @@ func NewImageResize(scaleWidth, cropHeight int, tempPath string, needCrop bool) 
 	//init batch filters
 	filters[ImgResize] = gift.Resize(scaleWidth, 0, gift.LanczosResampling)
 	if needCrop {
-		filters[ImgCropToSize] = gift.CropToSize(scaleWidth, cropHeight, gift.CenterAnchor)
+		//filters[ImgCropToSize] = gift.CropToSize(scaleWidth, cropHeight, gift.CenterAnchor)
 	}
+
+	//sigmoid
+	//filters[ImgSigmoid] = gift.Sigmoid(0.5, 7)
 
 	//self init
 	this := &ImageResize{
@@ -190,6 +198,37 @@ func (i *ImageResize) GetGifDimensions(gif *gif.GIF) (int, int) {
 }
 
 //resize image from file
+func (i *ImageResize) ResizeFromFullFile(fileSrc, fileDst string) bool {
+	var (
+		bRet bool
+	)
+
+	if fileSrc == "" || fileDst == "" {
+		return false
+	}
+
+	//load src image
+	src := i.LoadImage(fileSrc)
+	if src == nil {
+		return false
+	}
+
+	//process image by filters
+	for _, name := range i.filters {
+		gf, ok := i.gfs[name]
+		if !ok {
+			continue
+		}
+		src = i.ProcessOneGift(gf, src)
+
+		//begin save target image
+		bRet = i.SaveImage(fileDst, src)
+	}
+
+	return bRet
+}
+
+//resize image from file
 func (i *ImageResize) ResizeFromFile(fileName string) (bool, string) {
 	var (
 		finalFileName string
@@ -208,7 +247,7 @@ func (i *ImageResize) ResizeFromFile(fileName string) (bool, string) {
 	if src == nil {
 		return false, finalFileName
 	}
-	//
+
 	////reduce height
 	//size := src.Bounds().Size()
 	//log.Println("size:", size)

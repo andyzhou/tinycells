@@ -36,6 +36,12 @@ const (
 type Utils struct {
 }
 
+//shuffle slice
+func (u *Utils) ShuffleSlice(data []int) {
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(data), func(i, j int) { data[i], data[j] = data[j], data[i] })
+}
+
 //create json_object sql pass json data map
 func (u *Utils) GenJsonObject(
 					genHashMap map[string]interface{},

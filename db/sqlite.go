@@ -51,7 +51,7 @@ func (s *SqlLite) Close() {
 }
 
 //execute
-func (s *SqlLite) Execute(sql string) (bool, int64, int64) {
+func (s *SqlLite) Execute(sql string, args []interface{}) (bool, int64, int64) {
 	var (
 		lastInsertId, effectRows int64
 		err error
@@ -61,7 +61,7 @@ func (s *SqlLite) Execute(sql string) (bool, int64, int64) {
 		return false, lastInsertId, effectRows
 	}
 
-	result, err := s.db.Exec(sql)
+	result, err := s.db.Exec(sql, args...)
 	if err != nil {
 		log.Println("SqlLite, exec sql:", sql, " failed, err:", err.Error())
 		return false, lastInsertId, effectRows
@@ -79,7 +79,7 @@ func (s *SqlLite) Execute(sql string) (bool, int64, int64) {
 }
 
 //query
-func (s *SqlLite) Query(sql string) (bool, []map[string]string) {
+func (s *SqlLite) Query(sql string, args []interface{}) (bool, []map[string]string) {
 	var (
 		colSize, i int
 		err error
@@ -92,7 +92,7 @@ func (s *SqlLite) Query(sql string) (bool, []map[string]string) {
 		return false, nil
 	}
 
-	rows, err := s.db.Query(sql)
+	rows, err := s.db.Query(sql, args...)
 	if err != nil {
 		log.Println("SqlLite, query sql:", sql, " failed, err:", err.Error())
 		return false, nil
