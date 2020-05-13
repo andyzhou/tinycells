@@ -249,6 +249,10 @@ func (u *Utils) GetRealRandomVal(maxVal int) int {
 
 //convert date time string to timestamp
 func (u *Utils) DateTime2Unix(dateTime string) int64 {
+	//remove un useful info
+	dateTime = strings.ReplaceAll(dateTime, "T", " ")
+	dateTime = strings.ReplaceAll(dateTime, "Z", "")
+
 	//theTime, err := time.Parse(TimeLayOut, dateTime)
 	theTime, err := time.ParseInLocation(TimeLayOut, dateTime, time.Local)
 	if err != nil {
@@ -256,6 +260,16 @@ func (u *Utils) DateTime2Unix(dateTime string) int64 {
 		return 0
 	}
 	return theTime.Unix()
+}
+
+//convert timestamp to date format, like YYYY-MM-DD
+func (u *Utils) TimeStamp2Date(timeStamp int64) string {
+	dateTime := time.Unix(timeStamp, 0).Format(TimeLayOut)
+	tempSlice := strings.Split(dateTime, " ")
+	if tempSlice == nil || len(tempSlice) <= 0 {
+		return ""
+	}
+	return tempSlice[0]
 }
 
 //convert timestamp to data time string format

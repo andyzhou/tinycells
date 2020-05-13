@@ -169,7 +169,6 @@ func (s *DBService) GetArray(query string, args ...interface{}) ([]map[string]in
 
 	//init map for return
 	columns, _ := rows.Columns()
-	//log.Println("columns:", columns)
 
 	scanArgs := make([]interface{}, len(columns))
 	values := make([]interface{}, len(columns))

@@ -114,18 +114,18 @@ func (s *SqlLite) Query(sql string, args []interface{}) (bool, []map[string]stri
 	for rows.Next() {
 		//process single row record
 		err = rows.Scan(tempSlice...)
-		//log.Println("err:", err, ", tempSlice:", tempSlice)
 		i = 0
 		tempMap := make(map[string]string)
 		for _, col := range cols {
-			//log.Println("col:", col, ", type:", reflect.TypeOf(tempSlice[i]))
 			tempStr = ""
 			switch v := tempSlice[i].(type) {
 			case *[]uint8:
-				//log.Println("col:", col, ", v:", string(*v))
 				tempStr = fmt.Sprintf("%s", string(*v))
+			default:
+				tempStr = fmt.Sprintf("%v", v)
 			}
 			tempMap[col] = tempStr
+			//fmt.Println("col:", cols[i], ", v:", reflect.TypeOf(tempSlice[i]))
 			i++
 		}
 		results = append(results, tempMap)

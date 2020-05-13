@@ -70,11 +70,8 @@ func NewImageResize(
 	//init batch filters
 	filters[ImgResize] = gift.Resize(scaleWidth, 0, gift.LanczosResampling)
 	if needCrop {
-		//filters[ImgCropToSize] = gift.CropToSize(scaleWidth, cropHeight, gift.CenterAnchor)
+		filters[ImgCropToSize] = gift.CropToSize(scaleWidth, cropHeight, gift.CenterAnchor)
 	}
-
-	//sigmoid
-	//filters[ImgSigmoid] = gift.Sigmoid(0.5, 7)
 
 	//self init
 	this := &ImageResize{
