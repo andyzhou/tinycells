@@ -277,6 +277,22 @@ func (u *Utils) TimeStamp2DateTime(timeStamp int64) string {
 	return time.Unix(timeStamp, 0).Format(TimeLayOut)
 }
 
+//convert timestamp like 'Oct 10, 2020' format
+func (u *Utils) TimeStampToDayStr(timeStamp int64) string {
+	date := u.TimeStamp2Date(timeStamp)
+	if date == "" {
+		return  ""
+	}
+	tempSlice := strings.Split(date, "-")
+	if tempSlice == nil || len(tempSlice) < 3 {
+		return ""
+	}
+	year := tempSlice[0]
+	month, _ := strconv.Atoi(tempSlice[1])
+	day := tempSlice[2]
+	return fmt.Sprintf("%s %s, %s", time.Month(month).String(), day, year)
+}
+
 //check tcp error
 //return true need quit, false just gen error
 func (u *Utils) CheckTcpError(err error) bool {
