@@ -18,6 +18,7 @@ import (
 	"reflect"
 	"math"
 	"bytes"
+	"regexp"
 )
 
 /*
@@ -34,6 +35,23 @@ const (
 
 //util info
 type Utils struct {
+}
+
+//remove html tags
+func (u *Utils) TrimHtml(src string) string {
+	//convert to lower
+	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
+	src = re.ReplaceAllStringFunc(src, strings.ToLower)
+
+	//remove style
+	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
+	src = re.ReplaceAllString(src, "")
+
+	//remove script
+	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
+	src = re.ReplaceAllString(src, "")
+
+	return strings.TrimSpace(src)
 }
 
 //shuffle slice

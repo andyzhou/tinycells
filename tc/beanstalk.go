@@ -2,9 +2,9 @@ package tc
 
 import (
 	"github.com/kr/beanstalk"
+	"strings"
 	"log"
 	"time"
-	"strings"
 )
 
 /*
@@ -17,7 +17,7 @@ import (
 
  //internal macro define
  const (
- 	BeanstalkChanSize = 64
+ 	BeanstalkChanSize = 128
  )
 
  //received chan data
@@ -54,7 +54,11 @@ import (
 //////////////////////////
 
 //construct (STEP-1)
-func NewBeanstalkClient(tube, serverAddr string, receiveChan chan BeanstalkConsumerData) *BeanstalkClient {
+//serverAddr like: "127.0.0.1:11300"
+func NewBeanstalkClient(
+				tube, serverAddr string,
+				receiveChan chan BeanstalkConsumerData,
+			) *BeanstalkClient {
 	this := &BeanstalkClient{
 		tube:tube,
 		address:serverAddr,
@@ -69,10 +73,8 @@ func NewBeanstalkClient(tube, serverAddr string, receiveChan chan BeanstalkConsu
 
 //quit
 func (c *BeanstalkClient) Quit() {
-	log.Println("BeanstalkClient::Quit")
 	//c.needQuit = true
 	c.closeChan <- true
-	time.Sleep(time.Second/10)
 }
 
 //set callback for received data from consumer (STEP-2)
@@ -128,7 +130,6 @@ func (c *BeanstalkClient) Producer(data []byte, priority, ttr int) (bool, uint64
 	//format data
 	priorityInt32 := uint32(priority)
 	delayDuration := time.Second * time.Duration(ttr)
-	//ttrDuration :=  time.Second * time.Duration(ttr*2)
 
 	//send to server
 	queueId, err := c.producerConn.Put(data, priorityInt32, delayDuration, 0)
@@ -141,7 +142,6 @@ func (c *BeanstalkClient) Producer(data []byte, priority, ttr int) (bool, uint64
 }
 
 func (c *BeanstalkClient) ProducerLazy(data []byte, priority, ttr int) bool {
-	//log.Println("BeanstalkClient::ProducerLazy, data:", data, ", con:", c.producerConn)
 	if len(data) <= 0 {
 		return false
 	}
@@ -156,8 +156,6 @@ func (c *BeanstalkClient) ProducerLazy(data []byte, priority, ttr int) bool {
 			log.Println("BeanstalkClient::ProducerLazy, panic happened, err:", err)
 		}
 	}()
-
-	//log.Println("BeanstalkClient::ProducerLazy, data:", data)
 
 	//init lazy data
 	lazyData := BeanstalkData{
@@ -184,15 +182,19 @@ func (c *BeanstalkClient) initClient() bool {
 	)
 
 	//try connect server
+	//init producer
 	producerConn, err := beanstalk.Dial("tcp", c.address)
 	if err != nil {
-		log.Println("BeanstalkClient::initClient producer connect for ", c.address, " failed, err:", err.Error())
+		log.Println("BeanstalkClient::initClient producer connect for ", c.address,
+					" failed, err:", err.Error())
 		return false
 	}
 
+	//init consumer
 	consumerConn, err := beanstalk.Dial("tcp", c.address)
 	if err != nil {
-		log.Println("BeanstalkClient::initClient consumer connect for ", c.address, " failed, err:", err.Error())
+		log.Println("BeanstalkClient::initClient consumer connect for ", c.address,
+					" failed, err:", err.Error())
 		return false
 	}
 
@@ -232,12 +234,11 @@ func (c *BeanstalkClient) consumeDataProcess() {
 		id, body, err = c.consumerConn.Reserve(time.Second)
 		if err != nil {
 			if !strings.Contains(err.Error(), substr) {
-				log.Println("BeanstalkClient::consumeData of tube:", c.tube, " timeout, err:", err.Error())
+				log.Println("BeanstalkClient::consumeData of tube:", c.tube,
+							" timeout, err:", err.Error())
 			}
 			continue
 		}
-		//get real data
-		log.Println("BeanstalkClient::consumeData of tube:", c.tube, ", job:", id, ", body:", string(body))
 
 		//cast to chan of outside
 		consumerData := BeanstalkConsumerData{
@@ -249,14 +250,16 @@ func (c *BeanstalkClient) consumeDataProcess() {
 		//remove from queue
 		c.consumerConn.Delete(id)
 	}
-
-	log.Println("BeanstalkClient::consumeDataProcess of tube:", c.tube, ", need quit..")
 }
 
 //produce data to server
-func (c *BeanstalkClient) produceData(data *BeanstalkData) bool {
+func (c *BeanstalkClient) produceData(data *BeanstalkData) (bool, uint64) {
+	var (
+		id uint64
+	)
+
 	if data == nil {
-		return false
+		return false, id
 	}
 
 	delayDuration := time.Duration(data.delay) * time.Second
@@ -267,14 +270,15 @@ func (c *BeanstalkClient) produceData(data *BeanstalkData) bool {
 	id, err := c.producerConn.Put(data.data, priorityInt32, delayDuration, ttrDuration)
 	if err != nil {
 		log.Println("BeanstalkClient::produceData failed, err:", err.Error())
-		return false
+		return false, id
 	}
-	log.Println("BeanstalkClient::produceData success, id:", id)
-	return true
+
+	return true, id
 }
 
 //clean up
 func (c *BeanstalkClient) cleanUp() {
+	//data clean up
 	if c.producerConn != nil {
 		c.producerConn.Close()
 		c.producerConn = nil
@@ -283,6 +287,8 @@ func (c *BeanstalkClient) cleanUp() {
 		c.consumerConn.Close()
 		c.consumerConn = nil
 	}
+
+	//close chan
 	close(c.dataChan)
 	close(c.closeChan)
 }
@@ -293,9 +299,8 @@ func (c *BeanstalkClient) runMainProcess() {
 		data BeanstalkData
 		needQuit, isOk bool
 	)
-	log.Println("BeanstalkClient::runMainProcess of tube:", c.tube, ", runMainProcess..")
 	for {
-		if needQuit {
+		if needQuit && len(c.dataChan) <= 0 {
 			break
 		}
 		select {
@@ -310,5 +315,4 @@ func (c *BeanstalkClient) runMainProcess() {
 	}
 	//data clean up
 	c.cleanUp()
-	log.Println("BeanstalkClient::runMainProcess of tube:", c.tube, ", need quit..")
 }
