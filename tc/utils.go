@@ -37,6 +37,13 @@ const (
 type Utils struct {
 }
 
+//reverse int slice
+func (u *Utils) ReverseSlice(orgSlice []interface{}){
+	for i, j := 0, len(orgSlice)-1; i < j; i, j = i+1, j-1 {
+		orgSlice[i], orgSlice[j] = orgSlice[j], orgSlice[i]
+	}
+}
+
 //remove html tags
 func (u *Utils) TrimHtml(src string) string {
 	//convert to lower
@@ -60,6 +67,42 @@ func (u *Utils) ShuffleSlice(data []int) {
 	rand.Shuffle(len(data), func(i, j int) { data[i], data[j] = data[j], data[i] })
 }
 
+//create json_array sql pass json data slice
+func (u *Utils) GenJsonArrayAppendObject(
+					tabField string,
+					dataField string,
+					jsonSlice []interface{},
+				) (string, []interface{}) {
+	var (
+		buffer = bytes.NewBuffer(nil)
+		tempStr string
+		values = make([]interface{}, 0)
+	)
+
+	//basic check
+	if tabField == "" || dataField == "" ||
+	   jsonSlice == nil || len(jsonSlice) <= 0 {
+		return buffer.String(), values
+	}
+
+	//convert into relate data
+	i := 0
+	tempStr = fmt.Sprintf(" %s = JSON_ARRAY_APPEND(%s, ", tabField, tabField)
+	buffer.WriteString(tempStr)
+	for _, v := range jsonSlice {
+		if i > 0 {
+			buffer.WriteString(" ,")
+		}
+		tempStr = fmt.Sprintf("'$.%s', CAST(? AS JSON)", dataField)
+		buffer.WriteString(tempStr)
+		values = append(values, v)
+		i++
+	}
+	buffer.WriteString(")")
+	return buffer.String(), values
+}
+
+
 //create json_object sql pass json data map
 func (u *Utils) GenJsonObject(
 					genHashMap map[string]interface{},
@@ -82,8 +125,27 @@ func (u *Utils) GenJsonObject(
 		if i > 0 {
 			buffer.WriteString(" ,")
 		}
-		tempStr = fmt.Sprintf("'%s', ?", k)
-		values = append(values, v)
+		//check value is array kind or not
+		v1, isArray := v.([]string)
+		if isArray {
+			//format sub sql
+			arrayBuffer := bytes.NewBuffer(nil)
+			arrayBuffer.WriteString("JSON_ARRAY(")
+			for k, v2 := range v1 {
+				if k > 0 {
+					arrayBuffer.WriteString(",")
+				}
+				arrayBuffer.WriteString("?")
+				values = append(values, v2)
+			}
+			arrayBuffer.WriteString(")")
+
+			//is array format
+			tempStr = fmt.Sprintf("'%s', %s", k, arrayBuffer.String())
+		}else{
+			tempStr = fmt.Sprintf("'%s', ?", k)
+			values = append(values, v)
+		}
 		buffer.WriteString(tempStr)
 		i++
 	}
@@ -263,6 +325,46 @@ func (u *Utils) GetRandomVal(maxVal int) int {
 
 func (u *Utils) GetRealRandomVal(maxVal int) int {
 	return int(rand.Float64() * 1000) % (maxVal)
+}
+
+//get current date, like YYYY-MM-DD
+func (u *Utils) GetCurDate() string {
+	now := time.Now()
+	curDate := fmt.Sprintf("%d-%d-%d", now.Year(), now.Month(), now.Day())
+	return curDate
+}
+
+func (u *Utils) GetCurMonthInt() int {
+	var (
+		monthStr string
+	)
+	now := time.Now()
+	year := now.Year()
+	month := now.Month()
+	if month > 9 {
+		monthStr = fmt.Sprintf("%d", month)
+	}else{
+		monthStr = fmt.Sprintf("0%d", month)
+	}
+	finalDate := fmt.Sprintf("%d%s", year, monthStr)
+	finalDateInt, _ := strconv.Atoi(finalDate)
+	return finalDateInt
+}
+
+func (u *Utils) GetCurDateInt() int {
+	var (
+		dayStr string
+	)
+	now := time.Now()
+	day := now.Day()
+	if day > 9 {
+		dayStr = fmt.Sprintf("%d", day)
+	}else{
+		dayStr = fmt.Sprintf("0%d", day)
+	}
+	finalDate := fmt.Sprintf("%d%s", u.GetCurMonthInt(), dayStr)
+	finalDateInt, _ := strconv.Atoi(finalDate)
+	return finalDateInt
 }
 
 //convert date time string to timestamp
