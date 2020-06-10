@@ -85,9 +85,14 @@ func (u *Utils) GenJsonArrayAppendObject(
 		return buffer.String(), values
 	}
 
+	//check data field
+	tempStr = fmt.Sprintf(", %s = JSON_SET(%s, '$.%s', IFNULL(%s->'$.%s',JSON_ARRAY()))",
+						  tabField, tabField, dataField, tabField, dataField)
+	buffer.WriteString(tempStr)
+
 	//convert into relate data
 	i := 0
-	tempStr = fmt.Sprintf(" %s = JSON_ARRAY_APPEND(%s, ", tabField, tabField)
+	tempStr = fmt.Sprintf(", %s = JSON_ARRAY_APPEND(%s, ", tabField, tabField)
 	buffer.WriteString(tempStr)
 	for _, v := range jsonSlice {
 		if i > 0 {
