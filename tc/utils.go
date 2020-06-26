@@ -30,25 +30,64 @@ import (
 //internal macro defines
 const (
 	UseLostConnectionErr = "use of closed network connection"
+)
+
+//time format
+const (
 	TimeLayOut = "2006-01-02 15:04:05" //can't be changed!!!
+	Format              = "2006-01-02 15:04:05"
+	GoFormat            = "2006-01-02 15:04:05.999999999"
+	DateFormat          = "2006-01-02"
+	FormattedDateFormat = "Jan 2, 2006"
+	TimeFormat          = "15:04:05"
+	HourMinuteFormat    = "15:04"
+	HourFormat          = "15"
+	DayDateTimeFormat   = "Mon, Aug 2, 2006 3:04 PM"
+	CookieFormat        = "Monday, 02-Jan-2006 15:04:05 MST"
+	RFC822Format        = "Mon, 02 Jan 06 15:04:05 -0700"
+	RFC1036Format       = "Mon, 02 Jan 06 15:04:05 -0700"
+	RFC2822Format       = "Mon, 02 Jan 2006 15:04:05 -0700"
+	RFC3339Format       = "2006-01-02T15:04:05-07:00"
+	RSSFormat           = "Mon, 02 Jan 2006 15:04:05 -0700"
 )
 
 //util info
 type Utils struct {
 }
 
-//reverse int slice
-func (u *Utils) ReverseSlice(orgSlice []interface{}){
-	for i, j := 0, len(orgSlice)-1; i < j; i, j = i+1, j-1 {
-		orgSlice[i], orgSlice[j] = orgSlice[j], orgSlice[i]
+//convert string slice to interface slice
+func (u *Utils) ConvertStrSliceToGenSlice(orgSlice []string) []interface{} {
+	if orgSlice == nil || len(orgSlice) <= 0 {
+		return nil
 	}
+	result := make([]interface{}, 0)
+	for _, v := range orgSlice {
+		result = append(result, v)
+	}
+	return result
+}
+
+
+//reverse int slice
+func (u *Utils) ReverseSlice(args ...interface{}) []interface{}{
+	for i := 0; i < len(args)/2; i++ {
+		j := len(args) - i - 1
+		args[i], args[j] = args[j], args[i]
+	}
+	return args
 }
 
 //remove html tags
-func (u *Utils) TrimHtml(src string) string {
-	//convert to lower
-	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
-	src = re.ReplaceAllStringFunc(src, strings.ToLower)
+func (u *Utils) TrimHtml(src string, needLower bool) string {
+	var (
+		re *regexp.Regexp
+	)
+
+	if needLower {
+		//convert to lower
+		re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
+		src = re.ReplaceAllStringFunc(src, strings.ToLower)
+	}
 
 	//remove style
 	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
@@ -220,10 +259,12 @@ func (u *Utils) Seconds2TimeStr(seconds int) string {
 	minuteInt := (seconds - hourInt * 3600) / 60
 	secondInt := seconds - hourInt * 3600 - minuteInt * 60
 
-	if hourInt > 9 {
-		hourStr = fmt.Sprintf("%d", hourInt)
-	}else{
-		hourStr = fmt.Sprintf("0%d", hourInt)
+	if hourInt > 0 {
+		if hourInt > 9 {
+			hourStr = fmt.Sprintf("%d:", hourInt)
+		}else{
+			hourStr = fmt.Sprintf("0%d:", hourInt)
+		}
 	}
 
 	if minuteInt > 9 {
@@ -239,7 +280,7 @@ func (u *Utils) Seconds2TimeStr(seconds int) string {
 	}
 
 	//format time string
-	timeStr := fmt.Sprintf("%s:%s:%s", hourStr, minuteStr, secondStr)
+	timeStr := fmt.Sprintf("%s%s:%s", hourStr, minuteStr, secondStr)
 	return timeStr
 }
 
