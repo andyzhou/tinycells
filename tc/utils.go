@@ -334,22 +334,21 @@ func (u *Utils) LcFirst(str string) string {
 	return ""
 }
 
-//sub string
-func (u *Utils) SubString(source string, start int, end int) string {
-	var substring = ""
-	var pos = 0
-	for _, c := range source {
-		if pos < start {
-			pos++
-			continue
-		}
-		if pos >= end {
-			break
-		}
-		pos++
-		substring += string(c)
+//sub string, support utf8 string
+func (u *Utils) SubString(source string, start int, length int) string {
+	rs := []rune(source)
+	len := len(rs)
+	if start < 0 {
+		start = 0
 	}
-	return substring
+	if start >= len {
+		start = len
+	}
+	end := start + length
+	if end > len {
+		end = len
+	}
+	return string(rs[start:end])
 }
 
 //generate md5 string
