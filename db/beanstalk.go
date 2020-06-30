@@ -1,4 +1,4 @@
-package tc
+package db
 
 import (
 	"github.com/kr/beanstalk"

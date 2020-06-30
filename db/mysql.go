@@ -1,6 +1,7 @@
-package tc
+package db
 
 import (
+	"github.com/andyzhou/tinycells/tc"
 	_ "github.com/go-sql-driver/mysql"
 	"database/sql"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 )
 
 /*
- * Mysql db service interface, this remove to sub dir of `db`
+ * Mysql db service interface
  * @author <AndyZhou>
  * @mail <diudiu8848@163.com>
  */
@@ -36,8 +37,8 @@ type LazyCmd struct {
 	args []interface{} `dynamic args slice`
 }
 
- //db service info
-type DBService struct {
+ //mysql db service info
+type Mysql struct {
 	address string `mysql auth address`
 	poolSize int
 	dbPool map[int]*sql.DB `db pool`
@@ -47,16 +48,16 @@ type DBService struct {
 	closeChan chan bool
 	err error `error interface`
 	sync.Mutex
-	Utils
+	tc.Utils
 }
 
 //construct
-func NewDBService(dbAddress string) *DBService {
-	return NewDBServiceWithPool(dbAddress, DBPoolMin)
+func NewMysql(dbAddress string) *Mysql {
+	return NewMysqlWithPool(dbAddress, DBPoolMin)
 }
 
 //with pool
-func NewDBServiceWithPool(dbAddress string, poolSize int) *DBService {
+func NewMysqlWithPool(dbAddress string, poolSize int) *Mysql {
 	if poolSize < DBPoolMin {
 		poolSize = DBPoolMin
 	}
@@ -64,7 +65,7 @@ func NewDBServiceWithPool(dbAddress string, poolSize int) *DBService {
 		poolSize = DBPoolMax
 	}
 	address := fmt.Sprintf("%s?charset=utf8", dbAddress)
-	this := &DBService{
+	this := &Mysql{
 		address:address,
 		poolSize:poolSize,
 		dbPool:make(map[int]*sql.DB),
@@ -88,7 +89,7 @@ func NewDBServiceWithPool(dbAddress string, poolSize int) *DBService {
 //////
 
 //service quit
-func (s *DBService) Quit() {
+func (s *Mysql) Quit() {
 	//try catch panic
 	defer func() {
 		if err := recover(); err != nil {
@@ -100,13 +101,13 @@ func (s *DBService) Quit() {
 }
 
 //get db instance
-func (s *DBService) GetDB() *sql.DB {
+func (s *Mysql) GetDB() *sql.DB {
 	return s.getRandomDB()
 }
 
 //execute sql
 //return lastInsertId, effectRows, error
-func (s *DBService) Execute(query string, args ...interface{}) (int64, int64, error){
+func (s *Mysql) Execute(query string, args ...interface{}) (int64, int64, error){
 	if s.state == DBStateDown {
 		return 0, 0, errors.New("DB connect down")
 	}
@@ -127,7 +128,7 @@ func (s *DBService) Execute(query string, args ...interface{}) (int64, int64, er
 }
 
 //get one row record
-func (s *DBService) GetRow(query string, args ...interface{}) (map[string]interface{}, error) {
+func (s *Mysql) GetRow(query string, args ...interface{}) (map[string]interface{}, error) {
 	if s.state == DBStateDown {
 		return nil, errors.New("DB connect down")
 	}
@@ -149,7 +150,7 @@ func (s *DBService) GetRow(query string, args ...interface{}) (map[string]interf
 }
 
 //get batch records
-func (s *DBService) GetArray(query string, args ...interface{}) ([]map[string]interface{}, error) {
+func (s *Mysql) GetArray(query string, args ...interface{}) ([]map[string]interface{}, error) {
 	if s.state == DBStateDown {
 		return nil, errors.New("DB connect down")
 	}
@@ -195,7 +196,7 @@ func (s *DBService) GetArray(query string, args ...interface{}) ([]map[string]in
 }
 
 //lazy execute sql in async way
-func (s *DBService) LazyExecute(sql string, args ...interface{}) bool {
+func (s *Mysql) LazyExecute(sql string, args ...interface{}) bool {
 	if sql == "" {
 		return false
 	}
@@ -215,7 +216,7 @@ func (s *DBService) LazyExecute(sql string, args ...interface{}) bool {
 /////////////////////
 
 //execute command only
-func (s *DBService) onlyExecuteLazy(lazy LazyCmd) bool {
+func (s *Mysql) onlyExecuteLazy(lazy LazyCmd) bool {
 	//try get random db
 	db := s.getRandomDB()
 	if db == nil {
@@ -234,7 +235,7 @@ func (s *DBService) onlyExecuteLazy(lazy LazyCmd) bool {
 }
 
 //lazy process
-func (s *DBService) lazyProcess()  {
+func (s *Mysql) lazyProcess()  {
 	var (
 		lazy LazyCmd
 		needQuit, isOk bool
@@ -259,7 +260,7 @@ func (s *DBService) lazyProcess()  {
 }
 
 //get rand db connect
-func (s *DBService) getRandomDB() *sql.DB {
+func (s *Mysql) getRandomDB() *sql.DB {
 	realPoolSize := len(s.dbPool)
 	if realPoolSize <= 0 {
 		return nil
@@ -274,7 +275,7 @@ func (s *DBService) getRandomDB() *sql.DB {
 }
 
 //check server connect
-func (s *DBService) checkConnect() bool {
+func (s *Mysql) checkConnect() bool {
 	var (
 		err error
 	)
@@ -313,7 +314,7 @@ func (s *DBService) checkConnect() bool {
 }
 
 //connect db server
-func (s *DBService) connectServer() (bool, *sql.DB) {
+func (s *Mysql) connectServer() (bool, *sql.DB) {
 	var tip string
 
 	//init db driver
@@ -339,7 +340,7 @@ func (s *DBService) connectServer() (bool, *sql.DB) {
 }
 
 //init db pool
-func (s *DBService) initPool() {
+func (s *Mysql) initPool() {
 	var k = 1
 	for i := 1; i <= s.poolSize; i++ {
 		bRet, db := s.connectServer()

@@ -5,13 +5,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"github.com/andyzhou/tinycells/tc"
+	"context"
+	"reflect"
+	"errors"
 	"sync"
+	"time"
 	"fmt"
 	"log"
-	"context"
-	"time"
-	"errors"
-	"reflect"
 )
 
 /*

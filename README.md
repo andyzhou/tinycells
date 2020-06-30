@@ -1,3 +1,3 @@
 **Introduce**
 
-This is util code collections for developer.
+This is go code collections for developer.

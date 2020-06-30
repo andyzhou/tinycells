@@ -3,12 +3,12 @@ package queue
 import (
 	"github.com/andyzhou/tinycells/tc"
 	"github.com/go-redis/redis"
-	"sync"
+	"strconv"
 	"errors"
+	"sync"
+	"time"
 	"log"
 	"fmt"
-	"time"
-	"strconv"
 )
 
 /*

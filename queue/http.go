@@ -1,15 +1,15 @@
 package queue
 
 import (
-	"sync"
+	"io/ioutil"
 	"net/http"
-	"net"
+	"strings"
+	"bytes"
+	"sync"
 	"time"
 	"log"
-	"io/ioutil"
-	"bytes"
-	"strings"
 	"fmt"
+	"net"
 )
 
 /*

@@ -2,11 +2,11 @@ package queue
 
 import (
 	"github.com/andyzhou/tinycells/tc"
+	"strings"
+	"errors"
 	"sync"
 	"log"
 	"fmt"
-	"errors"
-	"strings"
 )
 
 /*
