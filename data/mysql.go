@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"log"
 	"fmt"
+	"github.com/andyzhou/tinycells/db"
 )
 
 /*
@@ -43,7 +44,7 @@ import (
 func (d *BaseMysql) GetTotalNum(
 					whereMap map[string]WherePara,
 					table string,
-					db *tc.DBService,
+					db *db.Mysql,
 				) int {
 	var (
 		values = make([]interface{}, 0)
@@ -86,7 +87,7 @@ func (d *BaseMysql) GetBatchData(
 				offset int,
 				size int,
 				table string,
-				db *tc.DBService,
+				db *db.Mysql,
 			) [][]byte {
 	var (
 		limitSql, orderBySql string
@@ -155,11 +156,13 @@ func (d *BaseMysql) GetBatchData(
 func (d *BaseMysql) GetOneData(
 				dataField string,
 				whereMap map[string]WherePara,
+				needRand bool,
 				table string,
-				db *tc.DBService,
+				db *db.Mysql,
 			) []byte {
 	var (
 		assignedDataField string
+		orderBy string
 		values = make([]interface{}, 0)
 	)
 
@@ -180,11 +183,16 @@ func (d *BaseMysql) GetOneData(
 		assignedDataField = "data"
 	}
 
+	if needRand {
+		orderBy = fmt.Sprintf(" ORDER BY RAND()")
+	}
+
 	//format sql
-	sql := fmt.Sprintf("SELECT %s FROM %s %s",
+	sql := fmt.Sprintf("SELECT %s FROM %s %s %s",
 						assignedDataField,
 						table,
 						whereBuffer.String(),
+						orderBy,
 					)
 
 	//query records
@@ -210,7 +218,7 @@ func (d *BaseMysql) GetOneData(
 func (d *BaseMysql) DelOneData(
 				whereMap map[string]WherePara,
 				table string,
-				db *tc.DBService,
+				db *db.Mysql,
 			) bool {
 	var (
 		values = make([]interface{}, 0)
@@ -246,7 +254,7 @@ func (d *BaseMysql) UpdateOneBaseData(
 					dataByte []byte,
 					whereMap map[string]interface{},
 					table string,
-					db *tc.DBService,
+					db *db.Mysql,
 				) bool {
 	var (
 		tempStr string
@@ -299,7 +307,7 @@ func (d *BaseMysql) UpdateCountOfOneData(
 					updateMap map[string]interface{},
 					whereMap map[string]WherePara,
 					table string,
-					db *tc.DBService,
+					db *db.Mysql,
 				) bool {
 	var (
 		tempStr string
@@ -358,7 +366,7 @@ func (d *BaseMysql) UpdateOneData(
 				ObjArrMap map[string][]interface{},
 				whereMap map[string]interface{},
 				table string,
-				db *tc.DBService,
+				db *db.Mysql,
 			) bool {
 	var (
 		tempStr string
@@ -448,7 +456,7 @@ func (d *BaseMysql) UpdateOneData(
 func (d *BaseMysql) AddData(
 				jsonByte []byte,
 				table string,
-				db *tc.DBService,
+				db *db.Mysql,
 			) bool {
 	//basic check
 	if jsonByte == nil || db == nil {
