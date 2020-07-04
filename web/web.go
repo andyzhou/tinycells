@@ -1,10 +1,10 @@
 package web
 
 import (
+	"fmt"
 	"github.com/kataras/iris"
 	"net/url"
 	"strings"
-	"fmt"
 )
 
 /*
@@ -20,23 +20,19 @@ import (
  }
 
 //get refer domain
-func (w *BaseWeb) GetReferDomain(ctx iris.Context) string {
+func (w *BaseWeb) GetReferDomain(referUrl string) string {
 	var (
 		referDomain string
 	)
-
-	referUrl := ctx.Request().Referer()
 	if referUrl == "" {
 		return referDomain
 	}
-
 	//find first '://' pos
 	protocolLen := len(HttpProtocol)
 	protocolPos := strings.Index(referUrl, HttpProtocol)
 	if protocolPos <= -1 {
 		return referDomain
 	}
-
 	//pick domain
 	tempBytes := []byte(referUrl)
 	tempBytesLen := len(tempBytes)
