@@ -44,8 +44,7 @@ type FaceMap struct {
 //construct
 func NewFaceMap() *FaceMap {
 	this := &FaceMap{
-		//faceMap:make(map[string]reflect.Value),
-		faceMap: sync.Map{},
+		faceMap: sync.Map{}, //keep map opt safety
 		callResult:make([]reflect.Value, 0),
 		inParam:make([]reflect.Value, MaxInParams),
 	}
@@ -76,13 +75,6 @@ func (f *FaceMap) Bind(name string, face interface{}) bool {
 	if v != nil {
 		return true
 	}
-
-	//if _, ok := f.faceMap[name]; ok {
-	//	//already exists
-	//	return true
-	//}
-	//add face with locker
-	//f.faceMap[name] = reflect.ValueOf(face)
 	f.faceMap.Store(name, reflect.ValueOf(face))
 	return true
 }
@@ -108,11 +100,6 @@ func (f *FaceMap) Cast(method string, params ...interface{}) bool {
 		inParam[i] = reflect.ValueOf(para)
 	}
 	//call method on each face
-	//f.Lock()
-	//defer f.Unlock()
-	//for _, face := range f.faceMap {
-	//	face.MethodByName(method).Call(inParam[0:paramNum])
-	//}
 	subFunc := func(key interface{}, face interface{}) bool {
 		face2, ok := face.(reflect.Value)
 		if ok {
@@ -134,15 +121,7 @@ func (f *FaceMap) Call(name string, method string, params ...interface{}) ([]ref
 	var (
 		tips string
 	)
-	//result := make([]reflect.Value, 0)
 	//check instance
-	//f.Lock()
-	//defer f.Unlock()
-	//f.face, f.isOk = f.faceMap[name]
-	//if !f.isOk {
-	//	f.tips = fmt.Sprintf("No face instance for name %s", name)
-	//	return nil, errors.New(f.tips)
-	//}
 	face, isOk := f.faceMap.Load(name)
 	if !isOk {
 		tips = fmt.Sprintf("No face instance for name %s", name)
