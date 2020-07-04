@@ -167,7 +167,7 @@ func (d *BaseMysql) GetOneData(
 	)
 
 	//basic check
-	if whereMap == nil || table == "" || db == nil {
+	if table == "" || db == nil {
 		return nil
 	}
 
@@ -252,12 +252,11 @@ func (d *BaseMysql) DelOneData(
 //update one base data
 func (d *BaseMysql) UpdateOneBaseData(
 					dataByte []byte,
-					whereMap map[string]interface{},
+					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
 				) bool {
 	var (
-		tempStr string
 		whereBuffer = bytes.NewBuffer(nil)
 		values = make([]interface{}, 0)
 	)
@@ -272,18 +271,9 @@ func (d *BaseMysql) UpdateOneBaseData(
 	values = append(values, dataByte)
 
 	//format where sql
-	if len(whereMap) > 0 {
-		whereBuffer.WriteString(" WHERE ")
-	}
-	i := 0
-	for field, val := range whereMap {
-		tempStr = fmt.Sprintf("%s = ?", field)
-		if i > 0 {
-			whereBuffer.WriteString(" AND ")
-		}
-		whereBuffer.WriteString(tempStr)
-		values = append(values, val)
-		i++
+	whereBuffer, whereValues := d.formatWhereSql(whereMap)
+	if whereValues != nil {
+		values = append(values, whereValues...)
 	}
 
 	//format sql
@@ -364,7 +354,7 @@ func (d *BaseMysql) UpdateCountOfOneData(
 func (d *BaseMysql) UpdateOneData(
 				updateMap map[string]interface{},
 				ObjArrMap map[string][]interface{},
-				whereMap map[string]interface{},
+				whereMap map[string]WherePara,
 				table string,
 				db *db.Mysql,
 			) bool {
@@ -421,18 +411,9 @@ func (d *BaseMysql) UpdateOneData(
 	}
 
 	//format where sql
-	i := 0
-	if whereMap != nil {
-		whereBuffer.WriteString(" WHERE ")
-	}
-	for field, val := range whereMap {
-		tempStr = fmt.Sprintf("%s = ?", field)
-		if i > 0 {
-			whereBuffer.WriteString(" AND ")
-		}
-		whereBuffer.WriteString(tempStr)
-		values = append(values, val)
-		i++
+	whereBuffer, whereValues := d.formatWhereSql(whereMap)
+	if whereValues != nil {
+		values = append(values, whereValues...)
 	}
 
 	//format sql

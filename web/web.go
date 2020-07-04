@@ -3,14 +3,52 @@ package web
 import (
 	"github.com/kataras/iris"
 	"net/url"
+	"strings"
+	"fmt"
 )
 
 /*
  * public api for iris web
  */
 
+ //inter macro define
+ const (
+ 	HttpProtocol = "://"
+ )
+
  type BaseWeb struct {
  }
+
+//get refer domain
+func (w *BaseWeb) GetReferDomain(ctx iris.Context) string {
+	var (
+		referDomain string
+	)
+
+	referUrl := ctx.Request().Referer()
+	if referUrl == "" {
+		return referDomain
+	}
+
+	//find first '://' pos
+	protocolLen := len(HttpProtocol)
+	protocolPos := strings.Index(referUrl, HttpProtocol)
+	if protocolPos <= -1 {
+		return referDomain
+	}
+
+	//pick domain
+	tempBytes := []byte(referUrl)
+	tempBytesLen := len(tempBytes)
+	prefixLen := protocolPos + protocolLen
+	resetUrl := tempBytes[prefixLen:tempBytesLen]
+	tempSlice := strings.Split(string(resetUrl), "/")
+	if tempSlice == nil || len(tempSlice) <= 0 {
+		return referDomain
+	}
+	referDomain = fmt.Sprintf("%s%s", tempBytes[0:prefixLen], tempSlice[0])
+	return referDomain
+}
 
 //get general parameter
 func (w *BaseWeb) GetParameter(
@@ -73,7 +111,7 @@ func (w *BaseWeb) GetReqUri(ctx iris.Context) string {
 }
 
 //get client ip
-func (u *BaseWeb) GetClientIp(ctx iris.Context) string {
+func (w *BaseWeb) GetClientIp(ctx iris.Context) string {
 	clientIp := ctx.RemoteAddr()
 	xRealIp := ctx.GetHeader("X-Real-IP")
 	xForwardedFor := ctx.GetHeader("X-Forwarded-For")
