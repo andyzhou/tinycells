@@ -13,7 +13,6 @@ type HttpRange struct {
 	Length int64
 }
 
-
 type Ranger struct {
 	http.ResponseWriter
 	start  int64
