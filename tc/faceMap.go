@@ -163,7 +163,7 @@ func (f *FaceMap) Call(name string, method string, params ...interface{}) ([]ref
 		if i >= MaxInParams {
 			break
 		}
-		inParam[totalParas] = reflect.ValueOf(para)
+		inParam[i] = reflect.ValueOf(para)
 		totalParas++
 	}
 
