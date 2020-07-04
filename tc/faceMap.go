@@ -2,8 +2,8 @@ package tc
 
 import (
 	"reflect"
-	"sync"
 	"errors"
+	"sync"
 	"fmt"
 )
 
@@ -27,7 +27,8 @@ import (
 
 //face map info
 type FaceMap struct {
-	faceMap map[string]reflect.Value `face:Value`
+	//faceMap map[string]reflect.Value `face:Value`
+	faceMap sync.Map
 	callResult []reflect.Value `call reflect value`
 	face reflect.Value `face reflect value`
 	isOk bool
@@ -37,13 +38,14 @@ type FaceMap struct {
 	callErr error
 	i int
 	para interface{}
-	sync.Mutex `data locker`
+	sync.RWMutex `data locker`
 }
 
 //construct
 func NewFaceMap() *FaceMap {
 	this := &FaceMap{
-		faceMap:make(map[string]reflect.Value),
+		//faceMap:make(map[string]reflect.Value),
+		faceMap: sync.Map{},
 		callResult:make([]reflect.Value, 0),
 		inParam:make([]reflect.Value, MaxInParams),
 	}
@@ -56,7 +58,8 @@ func NewFaceMap() *FaceMap {
 
 //get face instance
 func (f *FaceMap) GetFace(name string) interface{} {
-	face, ok := f.faceMap[name]
+	//face, ok := f.faceMap[name]
+	face, ok := f.faceMap.Load(name)
 	if !ok {
 		return nil
 	}
@@ -69,14 +72,18 @@ func (f *FaceMap) Bind(name string, face interface{}) bool {
 		return false
 	}
 	//check is exists or not
-	if _, ok := f.faceMap[name]; ok {
-		//already exists
+	v := f.GetFace(name)
+	if v != nil {
 		return true
 	}
+
+	//if _, ok := f.faceMap[name]; ok {
+	//	//already exists
+	//	return true
+	//}
 	//add face with locker
-	f.Lock()
-	f.faceMap[name] = reflect.ValueOf(face)
-	f.Unlock()
+	//f.faceMap[name] = reflect.ValueOf(face)
+	f.faceMap.Store(name, reflect.ValueOf(face))
 	return true
 }
 
@@ -101,9 +108,22 @@ func (f *FaceMap) Cast(method string, params ...interface{}) bool {
 		inParam[i] = reflect.ValueOf(para)
 	}
 	//call method on each face
-	for _, face := range f.faceMap {
-		face.MethodByName(method).Call(inParam[0:paramNum])
+	//f.Lock()
+	//defer f.Unlock()
+	//for _, face := range f.faceMap {
+	//	face.MethodByName(method).Call(inParam[0:paramNum])
+	//}
+	subFunc := func(key interface{}, face interface{}) bool {
+		face2, ok := face.(reflect.Value)
+		if ok {
+			face2.MethodByName(method).Call(inParam[0:paramNum])
+			return true
+		}else{
+			return false
+		}
 	}
+	f.faceMap.Range(subFunc)
+
 	//reset in param slice
 	inParam = []reflect.Value{}
 	return true
@@ -111,26 +131,45 @@ func (f *FaceMap) Cast(method string, params ...interface{}) bool {
 
 //dynamic call method with parameters support
 func (f *FaceMap) Call(name string, method string, params ...interface{}) ([]reflect.Value, error) {
+	var (
+		tips string
+	)
 	//result := make([]reflect.Value, 0)
 	//check instance
-	f.face, f.isOk = f.faceMap[name]
-	if !f.isOk {
-		f.tips = fmt.Sprintf("No face instance for name %s", name)
-		return nil, errors.New(f.tips)
+	//f.Lock()
+	//defer f.Unlock()
+	//f.face, f.isOk = f.faceMap[name]
+	//if !f.isOk {
+	//	f.tips = fmt.Sprintf("No face instance for name %s", name)
+	//	return nil, errors.New(f.tips)
+	//}
+	face, isOk := f.faceMap.Load(name)
+	if !isOk {
+		tips = fmt.Sprintf("No face instance for name %s", name)
+		return nil, errors.New(tips)
+	}
+
+	subFace, ok := face.(reflect.Value)
+	if !ok {
+		tips = fmt.Sprintf("Invalid face instance for name %s", name)
+		return nil, errors.New(tips)
 	}
 
 	//init parameters
-	f.params = len(params)
-	for f.i, f.para = range params {
-		if f.i >= MaxInParams {
+	inParam := make([]reflect.Value, 0)
+	totalParas := 0
+	//f.params = len(params)
+	for i, para := range params {
+		if i >= MaxInParams {
 			break
 		}
-		f.inParam[f.i] = reflect.ValueOf(f.para)
+		inParam[totalParas] = reflect.ValueOf(para)
+		totalParas++
 	}
 
 	//check method is nil or not
-	f.callResult = f.face.MethodByName(method).Call(f.inParam[0:f.params])
+	callResult := subFace.MethodByName(method).Call(inParam[0:totalParas])
 
-	return f.callResult, nil
+	return callResult, nil
 }
 
