@@ -167,9 +167,7 @@ func (f *FaceMap) Call(name string, method string, params ...interface{}) ([]ref
 		totalParas++
 	}
 
-	//check method is nil or not
-	fmt.Println("totalParas:", totalParas, ", inParamSize:", len(inParam))
-	fmt.Println("inParam:", inParam)
+	//dynamic call method with parameter
 	callResult := subFace.MethodByName(method).Call(inParam[0:totalParas])
 
 	return callResult, nil
