@@ -14,7 +14,7 @@ type HttpRange struct {
 }
 
 
-type RangeWriter struct {
+type Ranger struct {
 	http.ResponseWriter
 	start  int64
 	length int64
@@ -22,7 +22,7 @@ type RangeWriter struct {
 	HttpRange
 }
 
-func (w *RangeWriter) Write(data []byte) (size int, err error) {
+func (w *Ranger) Write(data []byte) (size int, err error) {
 	size = len(data)
 
 	if (w.flag+int64(size) <= w.start) || (w.flag >= w.start+w.length) {
@@ -46,7 +46,7 @@ func (w *RangeWriter) Write(data []byte) (size int, err error) {
 	return
 }
 
-func (w *RangeWriter) Process(res http.ResponseWriter, req *http.Request) {
+func (w *Ranger) Process(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Accept-Ranges", "bytes")
 	rangeString := req.Header.Get("Range")
 	if rangeString == "" {
@@ -54,7 +54,7 @@ func (w *RangeWriter) Process(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// BUG: get total content length (now: 100 for test)
-	ranges, err := ParseRange(rangeString, 100)
+	ranges, err := w.ParseRange(rangeString, 100)
 	if err != nil {
 		http.Error(res, "Requested Range Not Satisfiable", 416)
 		return
@@ -63,7 +63,7 @@ func (w *RangeWriter) Process(res http.ResponseWriter, req *http.Request) {
 	start := ranges[0].Start
 	length := ranges[0].Length
 
-	res.Header().Set("Content-Range", GetRange(start, start+length-1, -1))
+	res.Header().Set("Content-Range", w.GetRange(start, start+length-1, -1))
 	// res.Header().Set("Content-Length", strconv.FormatInt(length, 10))
 	res.WriteHeader(206)
 }
@@ -73,7 +73,7 @@ func (w *RangeWriter) Process(res http.ResponseWriter, req *http.Request) {
 //   "Range": "bytes=-50"
 //   "Range": "bytes=150-"
 //   "Range": "bytes=0-0,-1"
-func ParseRange(s string, size int64) ([]HttpRange, error) {
+func (w *Ranger) ParseRange(s string, size int64) ([]HttpRange, error) {
 	if s == "" {
 		return nil, nil // header not present
 	}
@@ -134,7 +134,7 @@ func ParseRange(s string, size int64) ([]HttpRange, error) {
 // Example:
 //   "Content-Range": "bytes 100-200/1000"
 //   "Content-Range": "bytes 100-200/*"
-func GetRange(start, end, total int64) string {
+func (w *Ranger) GetRange(start, end, total int64) string {
 	// unknown total: -1
 	if total == -1 {
 		return fmt.Sprintf("bytes %d-%d/*", start, end)
