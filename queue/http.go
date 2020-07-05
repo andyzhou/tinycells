@@ -3,10 +3,14 @@ package queue
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -30,16 +34,22 @@ const (
 	HttpReqChanSize = 128
 )
 
+//http file para
+type HttpFilePara struct {
+	FilePath string
+	FilePara string
+}
+
 //http request
 type HttpReq struct {
 	Kind int `GET or POST`
 	Url string
 	Headers map[string]string
 	Params map[string]interface{}
-	FilePara string
-	FilePath string
+	FilePara HttpFilePara
 	Body []byte
-	receiverChan chan []byte `http request receiver chan`
+	ReceiverChan chan []byte `http request receiver chan`
+	IsAsync bool
 }
 
 //http queue
@@ -55,7 +65,7 @@ func NewHttpQueue() *HttpQueue {
 	//self init
 	this := &HttpQueue{
 		reqChan:make(chan HttpReq, HttpReqChanSize),
-		closeChan:make(chan bool),
+		closeChan:make(chan bool, 1),
 	}
 
 	//inter init
@@ -72,7 +82,7 @@ func NewHttpReq() *HttpReq {
 		Headers:make(map[string]string),
 		Params:make(map[string]interface{}),
 		Body:make([]byte, 0),
-		receiverChan:make(chan []byte, HttpReqChanSize),
+		ReceiverChan:make(chan []byte, HttpReqChanSize),
 	}
 	return this
 }
@@ -104,7 +114,7 @@ func (q *HttpQueue) SendReq(req *HttpReq) (resp []byte) {
 	q.reqChan <- *req
 
 	//wait for response
-	resp, _ = <- req.receiverChan
+	resp, _ = <- req.ReceiverChan
 
 	return
 }
@@ -112,6 +122,76 @@ func (q *HttpQueue) SendReq(req *HttpReq) (resp []byte) {
 //////////////////
 //private func
 //////////////////
+
+//run main process
+func (q *HttpQueue) runMainProcess() {
+	var (
+		req HttpReq
+		resp = make([]byte, 0)
+		needQuit, isOk bool
+	)
+	for {
+		if needQuit && len(q.reqChan) <= 0 {
+			break
+		}
+		select {
+		case req, isOk = <- q.reqChan:
+			//process single request
+			if isOk {
+				resp = q.sendHttpReq(&req)
+				if resp == nil {
+					req.ReceiverChan <- []byte{}
+				}else{
+					req.ReceiverChan <- resp
+				}
+			}
+		case <- q.closeChan:
+			needQuit = true
+		}
+	}
+	//close chan
+	close(q.reqChan)
+	close(q.closeChan)
+}
+
+//upload file request
+func (q *HttpQueue) fileUploadReq(reqObj *HttpReq) (*http.Request, error) {
+	//try open file
+	file, err := os.Open(reqObj.FilePara.FilePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	//init multi part
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile(
+							reqObj.FilePara.FilePara,
+							filepath.Base(reqObj.FilePara.FilePath),
+						)
+	if err != nil {
+		return nil, err
+	}
+	_, err = io.Copy(part, file)
+
+	//add extend parameters
+	for key, val := range reqObj.Params {
+		v2, ok := val.(string)
+		if !ok {
+			continue
+		}
+		_ = writer.WriteField(key, v2)
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", reqObj.Url, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	return req, err
+}
 
 //general request
 func (q *HttpQueue) generalReq(reqObj *HttpReq) (*http.Request, error) {
@@ -171,8 +251,14 @@ func (q *HttpQueue) sendHttpReq(reqObj *HttpReq) []byte {
 		return nil
 	}
 
-	//general request
-	req, err = q.generalReq(reqObj)
+	if reqObj.FilePara.FilePath != "" &&
+	   reqObj.FilePara.FilePara != "" {
+		//file upload request
+		req, err = q.fileUploadReq(reqObj)
+	}else{
+		//general request
+		req, err = q.generalReq(reqObj)
+	}
 	if err != nil {
 		log.Println("HttpQueue::sendHttpReq, create request failed, err:", err.Error())
 		return nil
@@ -209,37 +295,6 @@ func (q *HttpQueue) sendHttpReq(reqObj *HttpReq) []byte {
 
 	//return response
 	return respBody
-}
-
-//run main process
-func (q *HttpQueue) runMainProcess() {
-	var (
-		req HttpReq
-		resp = make([]byte, 0)
-		needQuit, isOk bool
-	)
-	for {
-		if needQuit && len(q.reqChan) <= 0 {
-			break
-		}
-		select {
-		case req, isOk = <- q.reqChan:
-			//process single request
-			if isOk {
-				resp = q.sendHttpReq(&req)
-				if resp == nil {
-					req.receiverChan <- []byte{}
-				}else{
-					req.receiverChan <- resp
-				}
-			}
-		case <- q.closeChan:
-			needQuit = true
-		}
-	}
-	//close chan
-	close(q.reqChan)
-	close(q.closeChan)
 }
 
 //inter init
