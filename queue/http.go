@@ -82,7 +82,7 @@ func NewHttpReq() *HttpReq {
 		Headers:make(map[string]string),
 		Params:make(map[string]interface{}),
 		Body:make([]byte, 0),
-		ReceiverChan:make(chan []byte, HttpReqChanSize),
+		ReceiverChan:make(chan []byte),
 	}
 	return this
 }
@@ -113,9 +113,13 @@ func (q *HttpQueue) SendReq(req *HttpReq) (resp []byte) {
 	//send to chan
 	q.reqChan <- *req
 
-	//wait for response
-	resp, _ = <- req.ReceiverChan
+	//if request is async, just return
+	if req.IsAsync {
+		return
+	}
 
+	//sync mode, need wait for response
+	resp, _ = <- req.ReceiverChan
 	return
 }
 
