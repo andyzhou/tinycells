@@ -48,15 +48,23 @@ func (w *BaseWeb) GetReferDomain(referUrl string) string {
 
 //get general parameter
 func (w *BaseWeb) GetParameter(
-					name string,
-					form url.Values,
+					paraKey string,
+					httpForm url.Values,
 					ctx iris.Context,
 				) string {
-	value := form.Get(name)
-	if value == "" {
-		value = ctx.Params().Get(name)
+	//check and init http form
+	if httpForm == nil {
+		httpForm = w.GetHttpParameters(ctx)
 	}
-	return value
+	//get relate para value
+	paraVal := httpForm.Get(paraKey)
+	if paraVal == "" {
+		paraVal = ctx.Params().Get(paraKey)
+		if paraVal == "" {
+			paraVal = ctx.PostValueTrim(paraKey)
+		}
+	}
+	return paraVal
 }
 
 //get all values of one parameter

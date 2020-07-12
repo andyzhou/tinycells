@@ -379,6 +379,7 @@ func (u *Utils) GetCurDate() string {
 	return curDate
 }
 
+//get current month, like YYYYMM
 func (u *Utils) GetCurMonthInt() int {
 	var (
 		monthStr string
@@ -396,6 +397,7 @@ func (u *Utils) GetCurMonthInt() int {
 	return finalDateInt
 }
 
+//get current day, like YYYYMMDD
 func (u *Utils) GetCurDateInt() int {
 	var (
 		dayStr string
