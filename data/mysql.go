@@ -501,6 +501,10 @@ func (d *BaseMysql) getTotalVal(recordMap map[string]interface{}) int {
 	}
 	v2, ok := v.([]uint8)
 	if !ok {
+		v3, ok := v.(int64)
+		if ok {
+			return int(v3)
+		}
 		return 0
 	}
 	total, _ := strconv.Atoi(string(v2))
