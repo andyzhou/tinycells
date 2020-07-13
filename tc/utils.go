@@ -414,6 +414,23 @@ func (u *Utils) GetCurDateInt() int {
 	return finalDateInt
 }
 
+//get current hour, like YYYYMMDDHH
+func (u *Utils) GetCurHourInt() int {
+	var (
+		hourStr string
+	)
+	now := time.Now()
+	hour := now.Hour()
+	if hour > 9 {
+		hourStr = fmt.Sprintf("%d", hour)
+	}else{
+		hourStr = fmt.Sprintf("0%d", hour)
+	}
+	finalHour := fmt.Sprintf("%d%s", u.GetCurDateInt(), hourStr)
+	finalHourInt, _ := strconv.Atoi(finalHour)
+	return finalHourInt
+}
+
 //convert date time string to timestamp
 func (u *Utils) DateTime2Unix(dateTime string) int64 {
 	//remove un useful info
