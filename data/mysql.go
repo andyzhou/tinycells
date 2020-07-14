@@ -433,7 +433,7 @@ func (d *BaseMysql) UpdateOneData(
 	return true
 }
 
- //add data
+//add data
 func (d *BaseMysql) AddData(
 				jsonByte []byte,
 				table string,
@@ -461,8 +461,66 @@ func (d *BaseMysql) AddData(
 	return true
 }
 
+//add data with on duplicate update
+//if isInc opt, just increase field value
+func (d *BaseMysql) AddDataWithDuplicate(
+						jsonByte []byte,
+						updateMap map[string]interface{},
+						isInc bool,
+						table string,
+						db *db.Mysql,
+					) bool {
+	var (
+		tempStr string
+		updateBuffer = bytes.NewBuffer(nil)
+		values = make([]interface{}, 0)
+	)
 
- //check and get json byte
+	//basic check
+	if jsonByte == nil || db == nil || updateMap == nil {
+		return false
+	}
+
+	//init update buffer
+	tempStr = fmt.Sprintf("data = json_set(data, ")
+	updateBuffer.WriteString(tempStr)
+
+	values = append(values, jsonByte)
+	i := 0
+	for field, v := range updateMap {
+		if i > 0 {
+			updateBuffer.WriteString(", ")
+		}
+		if isInc {
+			tempStr = fmt.Sprintf("'$.%s', GREATEST(json_extract(data, '$.%s') + ?, 0)",
+				field, field)
+		}else{
+			tempStr = fmt.Sprintf("'$.%s', ?", field)
+		}
+		values = append(values, v)
+		updateBuffer.WriteString(tempStr)
+	}
+
+	//fill update buffer
+	updateBuffer.WriteString(")")
+
+	//format sql
+	sql := fmt.Sprintf("INSERT INTO %s(data)  VALUES(?) ON DUPLICATE KEY UPDATE %s",
+		table, updateBuffer.String(),
+	)
+
+	//save into db
+	_, _, err := db.Execute(sql, values...)
+	if err != nil {
+		log.Println("BaseMysql::AddDataWithDuplicate failed, err:", err.Error())
+		log.Println("track:", string(debug.Stack()))
+		return false
+	}
+
+	return true
+}
+
+//check and get json byte
 func (d *BaseMysql) GetByteDataByField(
 					field string,
 					recordMap map[string]interface{},
