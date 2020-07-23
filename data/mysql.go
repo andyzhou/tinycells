@@ -40,15 +40,56 @@ import (
  	tc.Utils
  }
 
+ //sum assigned field count
+ //field should be integer kind
+func (d *BaseMysql) SumCount(
+						field string,
+						whereMap map[string]WherePara,
+						table string,
+						db *db.Mysql,
+					) int64 {
+	var (
+		values = make([]interface{}, 0)
+		total int64
+	)
+
+	//basic check
+	if field == "" || table == "" || db == nil {
+		return total
+	}
+
+	//format where sql
+	whereBuffer, whereValues := d.formatWhereSql(whereMap)
+	if whereValues != nil {
+		values = append(values, whereValues...)
+	}
+
+	//format sql
+	sql := fmt.Sprintf("SELECT sum(%s) as total FROM %s %s",
+						field, table, whereBuffer.String(),
+					)
+
+	//query one record
+	recordMap, err := db.GetRow(sql, values...)
+	if err != nil {
+		log.Println("BaseMysql::SumCount failed, err:", err.Error())
+		log.Println("track:", string(debug.Stack()))
+		return total
+	}
+	total = d.getTotalVal(recordMap)
+	return total
+}
+
+
  //get total num
 func (d *BaseMysql) GetTotalNum(
 					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
-				) int {
+				) int64 {
 	var (
 		values = make([]interface{}, 0)
-		total int
+		total int64
 	)
 
 	//basic check
@@ -536,7 +577,9 @@ func (d *BaseMysql) GetByteDataByField(
 	return v2
 }
 
-func (d *BaseMysql) GetByteData(recordMap map[string]interface{}) []byte {
+func (d *BaseMysql) GetByteData(
+						recordMap map[string]interface{},
+					) []byte {
 	v, ok := recordMap[TableFieldOfData]
 	if !ok {
 		return nil
@@ -552,7 +595,9 @@ func (d *BaseMysql) GetByteData(recordMap map[string]interface{}) []byte {
 //private func
 ////////////////
 
-func (d *BaseMysql) getTotalVal(recordMap map[string]interface{}) int {
+func (d *BaseMysql) getTotalVal(
+						recordMap map[string]interface{},
+					) int64 {
 	v, ok := recordMap[TableFieldOfTotal]
 	if !ok {
 		return 0
@@ -561,11 +606,11 @@ func (d *BaseMysql) getTotalVal(recordMap map[string]interface{}) int {
 	if !ok {
 		v3, ok := v.(int64)
 		if ok {
-			return int(v3)
+			return int64(v3)
 		}
 		return 0
 	}
-	total, _ := strconv.Atoi(string(v2))
+	total, _ := strconv.ParseInt(string(v2), 10, 64)
 	return total
 }
 
