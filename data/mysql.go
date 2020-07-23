@@ -43,7 +43,7 @@ import (
  //sum assigned field count
  //field should be integer kind
 func (d *BaseMysql) SumCount(
-						field string,
+						jsonField string,
 						whereMap map[string]WherePara,
 						table string,
 						db *db.Mysql,
@@ -54,7 +54,7 @@ func (d *BaseMysql) SumCount(
 	)
 
 	//basic check
-	if field == "" || table == "" || db == nil {
+	if jsonField == "" || table == "" || db == nil {
 		return total
 	}
 
@@ -65,8 +65,8 @@ func (d *BaseMysql) SumCount(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("SELECT sum(%s) as total FROM %s %s",
-						field, table, whereBuffer.String(),
+	sql := fmt.Sprintf("SELECT sum(json_extract(data, '$.%s')) as total FROM %s %s",
+						jsonField, table, whereBuffer.String(),
 					)
 
 	//query one record
