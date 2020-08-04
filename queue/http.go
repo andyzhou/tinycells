@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -239,6 +240,7 @@ func (q *HttpQueue) generalReq(reqObj *HttpReq) (*http.Request, error) {
 
 	//format post form
 	if reqObj.Params != nil {
+		req.Form = make(url.Values)
 		for k, v := range reqObj.Params {
 			keyVal := fmt.Sprintf("%v", v)
 			req.Form.Add(k, keyVal)
