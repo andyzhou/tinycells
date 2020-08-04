@@ -237,6 +237,14 @@ func (q *HttpQueue) generalReq(reqObj *HttpReq) (*http.Request, error) {
 		req, err = http.NewRequest("GET", reqObj.Url, nil)
 	}
 
+	//format post form
+	if reqObj.Params != nil {
+		for k, v := range reqObj.Params {
+			keyVal := fmt.Sprintf("%v", v)
+			req.Form.Add(k, keyVal)
+		}
+	}
+
 	return req, err
 }
 
