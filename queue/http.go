@@ -235,6 +235,9 @@ func (q *HttpQueue) generalReq(reqObj *HttpReq) (*http.Request, error) {
 		}
 	default:
 		//init get req
+		if buffer != nil && buffer.Len() > 0 {
+			reqObj.Url = fmt.Sprintf("%s?%s", reqObj.Url, buffer.String())
+		}
 		req, err = http.NewRequest("GET", reqObj.Url, nil)
 	}
 
