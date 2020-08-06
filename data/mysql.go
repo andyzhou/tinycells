@@ -191,6 +191,67 @@ func (d *BaseMysql) GetBatchData(
 	return result
 }
 
+//get batch random data
+func (d *BaseMysql) GetBathRandomData(
+						whereMap map[string]WherePara,
+						size int,
+						table string,
+						db *db.Mysql,
+					) [][]byte {
+	var (
+		limitSql string
+		values = make([]interface{}, 0)
+	)
+
+	//basic check
+	if table == "" || db == nil {
+		return nil
+	}
+
+	//format limit sql
+	if size > 0 {
+		limitSql = fmt.Sprintf("LIMIT %d", size)
+	}
+
+	//format where sql
+	whereBuffer, whereValues := d.formatWhereSql(whereMap)
+	if whereValues != nil {
+		values = append(values, whereValues...)
+	}
+
+	//format sql
+	sql := fmt.Sprintf("SELECT data FROM %s %s ORDER BY RANDOM() %s",
+		table,
+		whereBuffer.String(),
+		limitSql,
+	)
+
+	//query records
+	recordsMap, err := db.GetArray(sql, values...)
+	if err != nil {
+		log.Println("BaseMysql::GetBathRandomData failed, err:", err.Error())
+		log.Println("track:", string(debug.Stack()))
+		return nil
+	}
+
+	//check records map
+	if recordsMap == nil || len(recordsMap) <= 0 {
+		return nil
+	}
+
+	//init result
+	result := make([][]byte, 0)
+
+	//analyze original record
+	for _, recordMap := range recordsMap {
+		jsonByte := d.GetByteData(recordMap)
+		if jsonByte == nil {
+			continue
+		}
+		result = append(result, jsonByte)
+	}
+	return result
+}
 
  //get one data
  //dataField default value is 'data'
