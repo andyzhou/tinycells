@@ -220,7 +220,7 @@ func (d *BaseMysql) GetBathRandomData(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("SELECT data FROM %s %s ORDER BY RANDOM() %s",
+	sql := fmt.Sprintf("SELECT data FROM %s %s ORDER BY RAND() %s",
 		table,
 		whereBuffer.String(),
 		limitSql,
