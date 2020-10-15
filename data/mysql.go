@@ -460,6 +460,24 @@ func (d *BaseMysql) UpdateOneData(
 				table string,
 				db *db.Mysql,
 			) bool {
+	return d.UpdateOneDataAdv(
+			updateMap,
+			ObjArrMap,
+			whereMap,
+			"data",
+			table,
+			db,
+		)
+}
+
+func (d *BaseMysql) UpdateOneDataAdv(
+				updateMap map[string]interface{},
+				objArrMap map[string][]interface{},
+				whereMap map[string]WherePara,
+				objField string,
+				table string,
+				db *db.Mysql,
+			) bool {
 	var (
 		tempStr string
 		updateBuffer = bytes.NewBuffer(nil)
@@ -476,6 +494,10 @@ func (d *BaseMysql) UpdateOneData(
 
 	if len(updateMap) <= 0 || len(whereMap) <= 0 {
 		return false
+	}
+
+	if objField == "" {
+		objField = "data"
 	}
 
 	//format update field sql
@@ -504,9 +526,9 @@ func (d *BaseMysql) UpdateOneData(
 	updateBuffer.WriteString(")")
 
 	//check object array map
-	if ObjArrMap != nil && len(ObjArrMap) > 0 {
-		for field, objSlice := range ObjArrMap {
-			tempSql, tempValues := d.GenJsonArrayAppendObject("data", field, objSlice)
+	if objArrMap != nil && len(objArrMap) > 0 {
+		for field, objSlice := range objArrMap {
+			tempSql, tempValues := d.GenJsonArrayAppendObject(objField, field, objSlice)
 			updateBuffer.WriteString(tempSql)
 			values = append(values, tempValues...)
 		}
@@ -535,7 +557,6 @@ func (d *BaseMysql) UpdateOneData(
 	return true
 }
 
-//add data
 func (d *BaseMysql) AddData(
 				jsonByte []byte,
 				table string,
