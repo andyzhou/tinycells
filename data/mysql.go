@@ -130,6 +130,42 @@ func (d *BaseMysql) GetBatchData(
 				table string,
 				db *db.Mysql,
 			) [][]byte {
+
+	recordsMap := d.GetBatchDataAdv(
+				whereMap,
+				orderBy,
+				offset,
+				size,
+				table,
+				db,
+			)
+	//check records map
+	if recordsMap == nil || len(recordsMap) <= 0 {
+		return nil
+	}
+
+	//init result
+	result := make([][]byte, 0)
+
+	//analyze original record
+	for _, recordMap := range recordsMap {
+		jsonByte := d.GetByteData(recordMap)
+		if jsonByte == nil {
+			continue
+		}
+		result = append(result, jsonByte)
+	}
+	return result
+}
+
+func (d *BaseMysql) GetBatchDataAdv(
+				whereMap map[string]WherePara,
+				orderBy string,
+				offset int,
+				size int,
+				table string,
+				db *db.Mysql,
+			) []map[string]interface{} {
 	var (
 		limitSql, orderBySql string
 		values = make([]interface{}, 0)
@@ -177,18 +213,7 @@ func (d *BaseMysql) GetBatchData(
 		return nil
 	}
 
-	//init result
-	result := make([][]byte, 0)
-
-	//analyze original record
-	for _, recordMap := range recordsMap {
-		jsonByte := d.GetByteData(recordMap)
-		if jsonByte == nil {
-			continue
-		}
-		result = append(result, jsonByte)
-	}
-	return result
+	return recordsMap
 }
 
 //get batch random data
@@ -262,8 +287,36 @@ func (d *BaseMysql) GetOneData(
 				table string,
 				db *db.Mysql,
 			) []byte {
+	dataFields := []string{
+		dataField,
+	}
+	byteMap := d.GetOneDataAdv(
+			dataFields,
+			whereMap,
+			needRand,
+			table,
+			db,
+		)
+	if byteMap == nil {
+		return nil
+	}
+	v, ok := byteMap[dataField]
+	if !ok {
+		return nil
+	}
+	return v
+}
+
+func (d *BaseMysql) GetOneDataAdv(
+				dataFields []string,
+				whereMap map[string]WherePara,
+				needRand bool,
+				table string,
+				db *db.Mysql,
+			) map[string][]byte {
 	var (
-		assignedDataField string
+		//assignedDataField string
+		dataFieldBuffer = bytes.NewBuffer(nil)
 		orderBy string
 		values = make([]interface{}, 0)
 	)
@@ -279,10 +332,17 @@ func (d *BaseMysql) GetOneData(
 		values = append(values, whereValues...)
 	}
 
-	if dataField != "" {
-		assignedDataField = dataField
+	if dataFields != nil {
+		i := 0
+		for _, dataField := range dataFields {
+			if i > 0 {
+				dataFieldBuffer.WriteString(",")
+			}
+			dataFieldBuffer.WriteString(dataField)
+			i++
+		}
 	}else{
-		assignedDataField = "data"
+		dataFieldBuffer.WriteString("data")
 	}
 
 	if needRand {
@@ -291,7 +351,7 @@ func (d *BaseMysql) GetOneData(
 
 	//format sql
 	sql := fmt.Sprintf("SELECT %s FROM %s %s %s",
-						assignedDataField,
+						dataFieldBuffer.String(),
 						table,
 						whereBuffer.String(),
 						orderBy,
@@ -310,9 +370,17 @@ func (d *BaseMysql) GetOneData(
 		return nil
 	}
 
+	//format result
+	result := make(map[string][]byte)
+
 	//get json byte data
-	jsonByte := d.GetByteDataByField(assignedDataField, recordMap)
-	return jsonByte
+	for _, dataField := range dataFields {
+		jsonByte := d.GetByteDataByField(dataField, recordMap)
+		if jsonByte != nil {
+			result[dataField] = jsonByte
+		}
+	}
+	return result
 }
 
 
@@ -660,9 +728,16 @@ func (d *BaseMysql) GetByteDataByField(
 }
 
 func (d *BaseMysql) GetByteData(
+					recordMap map[string]interface{},
+				) []byte {
+	return d.GetByteDataAdv(TableFieldOfData, recordMap)
+}
+
+func (d *BaseMysql) GetByteDataAdv(
+						field string,
 						recordMap map[string]interface{},
 					) []byte {
-	v, ok := recordMap[TableFieldOfData]
+	v, ok := recordMap[field]
 	if !ok {
 		return nil
 	}
