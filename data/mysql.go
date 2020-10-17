@@ -132,6 +132,7 @@ func (d *BaseMysql) GetBatchData(
 			) [][]byte {
 
 	recordsMap := d.GetBatchDataAdv(
+				"",
 				whereMap,
 				orderBy,
 				offset,
@@ -159,6 +160,7 @@ func (d *BaseMysql) GetBatchData(
 }
 
 func (d *BaseMysql) GetBatchDataAdv(
+				selectFields string,
 				whereMap map[string]WherePara,
 				orderBy string,
 				offset int,
@@ -174,6 +176,10 @@ func (d *BaseMysql) GetBatchDataAdv(
 	//basic check
 	if table == "" || db == nil {
 		return nil
+	}
+
+	if selectFields == "" {
+		selectFields = "data"
 	}
 
 	//format where sql
@@ -193,7 +199,8 @@ func (d *BaseMysql) GetBatchDataAdv(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("SELECT data FROM %s %s %s %s",
+	sql := fmt.Sprintf("SELECT %s FROM %s %s %s %s",
+						selectFields,
 						table,
 						whereBuffer.String(),
 						orderBySql,
