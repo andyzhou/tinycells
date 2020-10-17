@@ -697,6 +697,7 @@ func (d *BaseMysql) AddDataWithDuplicate(
 		}
 		values = append(values, v)
 		updateBuffer.WriteString(tempStr)
+		i++
 	}
 
 	//fill update buffer
