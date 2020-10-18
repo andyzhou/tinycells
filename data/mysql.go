@@ -294,6 +294,9 @@ func (d *BaseMysql) GetOneData(
 				table string,
 				db *db.Mysql,
 			) []byte {
+	if dataField == "" {
+		dataField = "data"
+	}
 	dataFields := []string{
 		dataField,
 	}
