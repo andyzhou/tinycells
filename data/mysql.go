@@ -339,7 +339,7 @@ func (d *BaseMysql) GetOneDataAdv(
 		values = append(values, whereValues...)
 	}
 
-	if dataFields != nil {
+	if dataFields != nil && len(dataFields) > 0 {
 		i := 0
 		for _, dataField := range dataFields {
 			if i > 0 {
