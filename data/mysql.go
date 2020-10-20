@@ -400,6 +400,18 @@ func (d *BaseMysql) DelOneData(
 				table string,
 				db *db.Mysql,
 			) bool {
+	return d.DelData(
+			whereMap,
+			table,
+			db,
+		)
+}
+
+func (d *BaseMysql) DelData(
+				whereMap map[string]WherePara,
+				table string,
+				db *db.Mysql,
+			) bool {
 	var (
 		values = make([]interface{}, 0)
 	)
