@@ -448,6 +448,16 @@ func (d *BaseMysql) UpdateOneBaseData(
 					table string,
 					db *db.Mysql,
 				) bool {
+	return d.UpdateOneBaseDataAdv("", dataByte, whereMap, table, db)
+}
+
+func (d *BaseMysql) UpdateOneBaseDataAdv(
+					dataField string,
+					dataByte []byte,
+					whereMap map[string]WherePara,
+					table string,
+					db *db.Mysql,
+				) bool {
 	var (
 		whereBuffer = bytes.NewBuffer(nil)
 		values = make([]interface{}, 0)
@@ -457,6 +467,10 @@ func (d *BaseMysql) UpdateOneBaseData(
 	if dataByte == nil || whereMap == nil ||
 	   table == "" || db == nil {
 		return false
+	}
+
+	if dataField == "" {
+		dataField = "data"
 	}
 
 	//fit values
@@ -469,8 +483,9 @@ func (d *BaseMysql) UpdateOneBaseData(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("UPDATE %s SET data = ? %s",
+	sql := fmt.Sprintf("UPDATE %s SET %s = ? %s",
 		table,
+		dataField,
 		whereBuffer.String(),
 	)
 
