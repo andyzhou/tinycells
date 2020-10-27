@@ -1,11 +1,11 @@
 package tc
 
 import (
+	"bytes"
 	"encoding/base64"
+	"log"
 	"runtime/debug"
 	"time"
-	"bytes"
-	"log"
 )
 
 /*

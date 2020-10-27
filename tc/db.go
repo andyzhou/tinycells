@@ -1,13 +1,13 @@
 package tc
 
 import (
-	_ "github.com/go-sql-driver/mysql"
 	"database/sql"
-	"fmt"
-	"log"
-	"time"
 	"errors"
+	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"log"
 	"sync"
+	"time"
 )
 
 /*

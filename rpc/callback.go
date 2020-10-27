@@ -1,12 +1,12 @@
 package rpc
 
 import (
-	"golang.org/x/net/context"
-	"log"
-	"io"
-	"time"
 	"errors"
+	"golang.org/x/net/context"
+	"io"
+	"log"
 	"sync"
+	"time"
 )
 
 /*

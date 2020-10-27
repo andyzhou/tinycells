@@ -1,24 +1,24 @@
 package tc
 
 import (
-	"net/http"
-	"strings"
-	"os"
-	"net"
-	"log"
-	"io"
-	"time"
-	"math/rand"
+	"bytes"
 	"crypto/md5"
 	"encoding/hex"
-	"unicode"
-	"strconv"
 	"fmt"
+	"io"
 	"io/ioutil"
-	"reflect"
+	"log"
 	"math"
-	"bytes"
+	"math/rand"
+	"net"
+	"net/http"
+	"os"
+	"reflect"
 	"regexp"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
 )
 
 /*

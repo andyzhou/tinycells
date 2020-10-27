@@ -1,11 +1,11 @@
 package rest
 
 import (
-	"github.com/andyzhou/tinycells/tc"
-	"sync"
 	"bytes"
-	"strings"
+	"github.com/andyzhou/tinycells/tc"
 	"sort"
+	"strings"
+	"sync"
 )
 
 /*

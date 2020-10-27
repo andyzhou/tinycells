@@ -1,10 +1,10 @@
 package tc
 
 import (
-	"reflect"
 	"errors"
-	"sync"
 	"fmt"
+	"reflect"
+	"sync"
 )
 
 /**

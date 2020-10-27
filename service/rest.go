@@ -1,9 +1,9 @@
 package service
 
 import (
+	"fmt"
 	"github.com/emicklei/go-restful"
 	"log"
-	"fmt"
 	"net/http"
 )
 

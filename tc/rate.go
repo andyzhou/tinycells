@@ -1,9 +1,9 @@
 package tc
 
 import (
+	"fmt"
 	"math"
 	"time"
-	"fmt"
 )
 
 /*

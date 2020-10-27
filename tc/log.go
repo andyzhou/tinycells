@@ -1,12 +1,12 @@
 package tc
 
 import (
-	"os"
 	"fmt"
 	"log"
-	"time"
+	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 /*

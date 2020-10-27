@@ -1,9 +1,9 @@
 package nets
 
 import (
+	"log"
 	"math"
 	"net"
-	"log"
 )
 
 /*

@@ -1,9 +1,9 @@
 package nets
 
 import (
-	"sync"
-	"net"
 	"log"
+	"net"
+	"sync"
 	"time"
 )
 

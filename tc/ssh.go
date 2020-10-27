@@ -2,17 +2,17 @@ package tc
 
 
 import (
+	"errors"
+	"fmt"
 	"golang.org/x/crypto/ssh"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
-	"time"
-	"fmt"
 	"os"
-	"io"
 	"path"
 	"sync"
-	"errors"
+	"time"
 )
 
 /*

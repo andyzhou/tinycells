@@ -1,11 +1,11 @@
 package tc
 
 import (
-	"net/http"
-	"strings"
-	"strconv"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
 )
 
 type HttpRange struct {

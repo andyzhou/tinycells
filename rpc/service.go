@@ -1,9 +1,9 @@
 package rpc
 
 import (
+	"fmt"
 	"github.com/andyzhou/tinycells/nets"
 	"google.golang.org/grpc"
-	"fmt"
 	"log"
 	"net"
 )

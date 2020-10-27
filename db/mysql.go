@@ -1,14 +1,14 @@
 package db
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"github.com/andyzhou/tinycells/tc"
 	_ "github.com/go-sql-driver/mysql"
-	"database/sql"
-	"fmt"
 	"log"
-	"time"
-	"errors"
 	"sync"
+	"time"
 )
 
 /*

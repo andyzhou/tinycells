@@ -1,19 +1,19 @@
 package nets
 
 import (
-	"net"
-	"fmt"
-	"os"
-	"encoding/json"
-	"log"
-	"path/filepath"
-	"syscall"
-	"net/http"
-	"os/signal"
-	"time"
 	"context"
-	"sync"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"sync"
+	"syscall"
+	"time"
 )
 
 /*

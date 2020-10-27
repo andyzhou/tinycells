@@ -1,11 +1,11 @@
 package service
 
 import (
-	"github.com/andyzhou/tinycells/tc"
-	"github.com/andyzhou/tinycells/queue"
-	"sync"
 	"errors"
+	"github.com/andyzhou/tinycells/queue"
+	"github.com/andyzhou/tinycells/tc"
 	"strconv"
+	"sync"
 )
 
 /*

@@ -1,11 +1,11 @@
 package rest
 
 import (
+	"errors"
 	"github.com/emicklei/go-restful"
 	"github.com/gorilla/schema"
-	"sync"
 	"log"
-	"errors"
+	"sync"
 )
 
 /*

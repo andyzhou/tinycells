@@ -1,11 +1,11 @@
 package rest
 
 import (
-	"github.com/andyzhou/tinycells/tc"
+	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
-	"compress/gzip"
-	"bytes"
+	"github.com/andyzhou/tinycells/tc"
 	"io"
 	"log"
 )

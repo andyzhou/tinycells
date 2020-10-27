@@ -1,14 +1,14 @@
 package queue
 
 import (
+	"errors"
+	"fmt"
 	"github.com/andyzhou/tinycells/tc"
 	"github.com/go-redis/redis"
+	"log"
 	"strconv"
-	"errors"
 	"sync"
 	"time"
-	"log"
-	"fmt"
 )
 
 /*

@@ -3,10 +3,10 @@ package nets
 import (
 	"github.com/andyzhou/tinycells/tc"
 	"log"
-	"time"
+	"math"
 	"net"
 	"sync"
-	"math"
+	"time"
 )
 
 /**

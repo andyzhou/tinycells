@@ -1,20 +1,20 @@
 package tc
 
 import (
-	"github.com/disintegration/gift"
-	"github.com/aaparella/carve"
-	"golang.org/x/image/draw"
-	"image/jpeg"
-	"image/gif"
-	"image/png"
-	"image"
-	"log"
-	"os"
-	"io"
 	"fmt"
-	"time"
-	"strings"
+	"github.com/aaparella/carve"
+	"github.com/disintegration/gift"
+	"golang.org/x/image/draw"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io"
+	"log"
 	"math"
+	"os"
+	"strings"
+	"time"
 )
 
 /*

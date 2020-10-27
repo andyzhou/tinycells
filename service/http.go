@@ -1,8 +1,8 @@
 package service
 
 import (
-	"github.com/andyzhou/tinycells/tc"
 	"github.com/andyzhou/tinycells/queue"
+	"github.com/andyzhou/tinycells/tc"
 	"sync"
 )
 

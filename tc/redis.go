@@ -1,13 +1,13 @@
 package tc
 import (
-	"github.com/garyburd/redigo/redis"
-	"time"
-	"sync"
-	"log"
 	"errors"
+	"github.com/garyburd/redigo/redis"
 	"io"
+	"log"
 	"net"
 	"reflect"
+	"sync"
+	"time"
 )
 
 /**

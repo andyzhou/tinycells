@@ -1,11 +1,11 @@
 package db
 
 import (
-	"github.com/Shopify/sarama"
-	"time"
-	"log"
 	"fmt"
+	"github.com/Shopify/sarama"
+	"log"
 	"sync"
+	"time"
 )
 
 /*

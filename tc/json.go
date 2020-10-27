@@ -2,8 +2,8 @@ package tc
 
 import (
 	"encoding/json"
-	"runtime/debug"
 	"log"
+	"runtime/debug"
 )
 
 /*

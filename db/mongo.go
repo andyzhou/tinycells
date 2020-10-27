@@ -1,17 +1,17 @@
 package db
 
 import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/andyzhou/tinycells/tc"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
-	"github.com/andyzhou/tinycells/tc"
-	"context"
+	"log"
 	"reflect"
-	"errors"
 	"sync"
 	"time"
-	"fmt"
-	"log"
 )
 
 /*

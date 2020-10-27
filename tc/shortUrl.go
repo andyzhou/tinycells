@@ -1,8 +1,8 @@
 package tc
 
 import (
-	"fmt"
 	"crypto/md5"
+	"fmt"
 	"strconv"
 )
 

@@ -2,8 +2,8 @@ package db
 
 import (
 	"github.com/kr/beanstalk"
-	"strings"
 	"log"
+	"strings"
 	"time"
 )
 

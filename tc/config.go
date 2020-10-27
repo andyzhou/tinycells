@@ -2,10 +2,10 @@ package tc
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"strconv"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"strconv"
 )
 
 /*
