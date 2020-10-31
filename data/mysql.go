@@ -27,11 +27,13 @@ import (
  	WhereKindOfGen = iota
  	WhereKindOfIn	  //for in('x','y')
  	WhereKindOfInSet  //for FIND_IN_SET(val, `x`, 'y')
+ 	WhereKindOfAssigned //for assigned condition, like '>', '<', '!=', etc.
  )
 
  //where para
  type WherePara struct {
  	Kind int
+ 	Condition string //used for `WhereKindOfAssigned`, for example ">", "<=", etc.
  	Val interface{}
  }
 
@@ -856,6 +858,12 @@ func (d *BaseMysql) formatWhereSql(
 		case WhereKindOfInSet:
 			{
 				tempStr = fmt.Sprintf(" FIND_IN_SET(?, %s)", field)
+				whereBuffer.WriteString(tempStr)
+				values = append(values, wherePara.Val)
+			}
+		case WhereKindOfAssigned:
+			{
+				tempStr = fmt.Sprintf("%s %s ?", field, wherePara.Condition)
 				whereBuffer.WriteString(tempStr)
 				values = append(values, wherePara.Val)
 			}
