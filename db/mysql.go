@@ -64,7 +64,7 @@ func NewMysqlWithPool(dbAddress string, poolSize int) *Mysql {
 	if poolSize > DBPoolMax {
 		poolSize = DBPoolMax
 	}
-	address := fmt.Sprintf("%s?charset=utf8", dbAddress)
+	address := fmt.Sprintf("%s?charset=utf8mb4,utf8", dbAddress)
 	this := &Mysql{
 		address:address,
 		poolSize:poolSize,
