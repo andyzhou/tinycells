@@ -608,7 +608,8 @@ func (d *BaseMysql) UpdateOneDataAdv(
 	}
 
 	//format update field sql
-	updateBuffer.WriteString("json_set(data ")
+	tempStr = fmt.Sprintf("json_set(%s ", objField)
+	updateBuffer.WriteString(tempStr)
 	for field, val := range updateMap {
 		//reset object value slice
 		objectValSlice = objectValSlice[:0]
@@ -648,8 +649,9 @@ func (d *BaseMysql) UpdateOneDataAdv(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("UPDATE %s SET data = %s %s",
+	sql := fmt.Sprintf("UPDATE %s SET %s = %s %s",
 						table,
+						objField,
 						updateBuffer.String(),
 						whereBuffer.String(),
 					)
@@ -863,6 +865,7 @@ func (d *BaseMysql) formatWhereSql(
 			}
 		case WhereKindOfAssigned:
 			{
+				//like field >= value, etc.
 				tempStr = fmt.Sprintf("%s %s ?", field, wherePara.Condition)
 				whereBuffer.WriteString(tempStr)
 				values = append(values, wherePara.Val)
