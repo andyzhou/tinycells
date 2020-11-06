@@ -21,6 +21,20 @@ func NewBaseJson() *BaseJson {
 	return this
 }
 
+ //encode self
+func (j *BaseJson) EncodeSelf() []byte {
+	var result = make([]byte, 0)
+
+	//encode json
+	resp, err := json.Marshal(j)
+	if err != nil {
+		log.Println("BaseJson::EncodeSelf failed, err:", err.Error())
+		return result
+	}
+	result = resp
+	return result
+}
+
 //encode json data
 func (j *BaseJson) Encode(i interface{}) []byte {
 	var result = make([]byte, 0)
