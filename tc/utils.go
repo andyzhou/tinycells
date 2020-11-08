@@ -55,6 +55,19 @@ const (
 type Utils struct {
 }
 
+//verify string is english, numeric or combination
+func (u *Utils) VerifyEnglishNumeric(input string) bool {
+	if input == "" {
+		return false
+	}
+	for _, v := range input {
+		if !unicode.IsLetter(v) && !unicode.IsNumber(v) {
+			return false
+		}
+	}
+	return true
+}
+
 //convert string slice to interface slice
 func (u *Utils) ConvertStrSliceToGenSlice(orgSlice []string) []interface{} {
 	if orgSlice == nil || len(orgSlice) <= 0 {
