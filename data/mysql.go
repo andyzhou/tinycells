@@ -552,14 +552,8 @@ func (d *BaseMysql) UpdateCountOfOneDataAdv(
 		switch val.(type) {
 		case float64:
 			objDefaultVal = 0.0
-		case int64:
-			objDefaultVal = 0
-		case int:
-			objDefaultVal = 0
-		case bool:
-			objDefaultVal = false
 		default:
-			objDefaultVal = ""
+			objDefaultVal = 0
 		}
 		tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v), '$.%s', " +
 					"GREATEST(json_extract(data, '$.%s') + ?, 0)",
