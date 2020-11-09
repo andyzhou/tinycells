@@ -6,7 +6,6 @@ import (
 	"github.com/andyzhou/tinycells/db"
 	"github.com/andyzhou/tinycells/tc"
 	"log"
-	"reflect"
 	"runtime/debug"
 	"strconv"
 )
@@ -509,11 +508,27 @@ func (d *BaseMysql) UpdateCountOfOneData(
 					table string,
 					db *db.Mysql,
 				) bool {
+	return d.UpdateCountOfOneDataAdv(
+			updateMap,
+			whereMap,
+			"data",
+			table,
+			db,
+		)
+}
+func (d *BaseMysql) UpdateCountOfOneDataAdv(
+					updateMap map[string]interface{},
+					whereMap map[string]WherePara,
+					objField string,
+					table string,
+					db *db.Mysql,
+				) bool {
 	var (
 		tempStr string
 		updateBuffer = bytes.NewBuffer(nil)
 		whereBuffer = bytes.NewBuffer(nil)
 		values = make([]interface{}, 0)
+		objDefaultVal interface{}
 	)
 
 	//basic check
@@ -526,12 +541,29 @@ func (d *BaseMysql) UpdateCountOfOneData(
 		return false
 	}
 
+	if objField == "" {
+		objField = "data"
+	}
+
 	//format update field sql
-	updateBuffer.WriteString("json_set(data ")
+	tempStr = fmt.Sprintf("json_set(%s ", objField)
+	updateBuffer.WriteString(tempStr)
 	for field, val := range updateMap {
-		tempStr = fmt.Sprintf(", '$.%s', " +
+		switch val.(type) {
+		case float64:
+			objDefaultVal = 0.0
+		case int64:
+			objDefaultVal = 0
+		case int:
+			objDefaultVal = 0
+		case bool:
+			objDefaultVal = false
+		default:
+			objDefaultVal = ""
+		}
+		tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v), '$.%s', " +
 					"GREATEST(json_extract(data, '$.%s') + ?, 0)",
-					field, field)
+					field, objField, field, objDefaultVal, field, field)
 		updateBuffer.WriteString(tempStr)
 		values = append(values, val)
 	}
@@ -615,8 +647,7 @@ func (d *BaseMysql) UpdateOneDataAdv(
 	for field, val := range updateMap {
 		//reset object value slice
 		objectValSlice = objectValSlice[:0]
-
-		fmt.Println("field:", field, ", val:", val, ", type:", reflect.TypeOf(val))
+		//fmt.Println("field:", field, ", val:", val, ", type:", reflect.TypeOf(val))
 
 		//check value kind
 		//if hash map, need convert to json object kind
