@@ -556,7 +556,7 @@ func (d *BaseMysql) UpdateCountOfOneDataAdv(
 			objDefaultVal = 0
 		}
 		tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v), '$.%s', " +
-					"GREATEST(json_extract(data, '$.%s') + ?, 0)",
+					"GREATEST(IFNULL(json_extract(data, '$.%s'), 0) + ?, 0)",
 					field, objField, field, objDefaultVal, field, field)
 		updateBuffer.WriteString(tempStr)
 		values = append(values, val)
