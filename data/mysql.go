@@ -591,6 +591,7 @@ func (d *BaseMysql) UpdateOneDataAdv(
 		whereBuffer = bytes.NewBuffer(nil)
 		values = make([]interface{}, 0)
 		objectValSlice []interface{}
+		objDefaultVal interface{}
 	)
 
 	//basic check
@@ -622,7 +623,20 @@ func (d *BaseMysql) UpdateOneDataAdv(
 			tempStr, objectValSlice = d.GenJsonObject(v)
 			tempStr = fmt.Sprintf(",'$.%s', %s", field, tempStr)
 		}else {
-			tempStr = fmt.Sprintf(",'$.%s', ?", field)
+			//tempStr = fmt.Sprintf(",'$.%s', ?", field)
+			switch val.(type) {
+			case float64:
+				objDefaultVal = 0.0
+			case int64:
+				objDefaultVal = 0
+			case bool:
+				objDefaultVal = false
+			default:
+				objDefaultVal = ""
+			}
+			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
+								  ",'$.%s', ?",
+							field, objField, field, objDefaultVal, field)
 		}
 		if isHashMap {
 			values = append(values, objectValSlice...)
