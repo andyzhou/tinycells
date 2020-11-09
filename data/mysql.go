@@ -632,6 +632,8 @@ func (d *BaseMysql) UpdateOneDataAdv(
 				objDefaultVal = 0.0
 			case int64:
 				objDefaultVal = 0
+			case int:
+				objDefaultVal = 0
 			case bool:
 				objDefaultVal = false
 			default:
