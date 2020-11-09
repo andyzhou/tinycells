@@ -570,8 +570,9 @@ func (d *BaseMysql) UpdateCountOfOneDataAdv(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("UPDATE %s SET data = %s %s",
+	sql := fmt.Sprintf("UPDATE %s SET %s = %s %s",
 		table,
+		objField,
 		updateBuffer.String(),
 		whereBuffer.String(),
 	)
