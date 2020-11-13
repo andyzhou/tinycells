@@ -663,7 +663,7 @@ func (d *BaseMysql) UpdateOneDataAdv(
 			case bool:
 				objDefaultVal = false
 			default:
-				objDefaultVal = ""
+				objDefaultVal = "''"
 			}
 			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
 								  ",'$.%s', ?",
