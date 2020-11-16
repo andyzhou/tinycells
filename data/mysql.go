@@ -679,7 +679,6 @@ func (d *BaseMysql) UpdateOneDataAdv(
 				genMap, isOk = val.(map[string]interface{})
 				if isOk {
 					subSql, objectValSlice = d.GenJsonObject(genMap)
-					fmt.Println("subSql:", subSql)
 				}
 			}
 		default:
