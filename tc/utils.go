@@ -159,8 +159,35 @@ func (u *Utils) GenJsonArrayAppendObject(
 	return buffer.String(), values
 }
 
-
 //create json_object sql pass json data map
+//return subSql, values
+func (u *Utils) GenJsonArray(
+			valSlice []interface{},
+		) (string, []interface{}) {
+	var (
+		buffer = bytes.NewBuffer(nil)
+		values = make([]interface{}, 0)
+	)
+	//basic check
+	if valSlice == nil || len(valSlice) <= 0 {
+		return buffer.String(), values
+	}
+
+	arrayBuffer := bytes.NewBuffer(nil)
+	arrayBuffer.WriteString("JSON_ARRAY(")
+	for k, v2 := range valSlice {
+		if k > 0 {
+			arrayBuffer.WriteString(",")
+		}
+		arrayBuffer.WriteString("?")
+		values = append(values, v2)
+	}
+	arrayBuffer.WriteString(")")
+	return arrayBuffer.String(), values
+}
+
+
+//for general map
 func (u *Utils) GenJsonObject(
 					genHashMap map[string]interface{},
 				) (string, []interface{}) {

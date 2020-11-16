@@ -621,6 +621,11 @@ func (d *BaseMysql) UpdateOneDataAdv(
 		values = make([]interface{}, 0)
 		objectValSlice []interface{}
 		objDefaultVal interface{}
+		subSql string
+		//isHashMap bool
+		genMap map[string]interface{}
+		genSlice []interface{}
+		isOk bool
 	)
 
 	//basic check
@@ -642,41 +647,88 @@ func (d *BaseMysql) UpdateOneDataAdv(
 	updateBuffer.WriteString(tempStr)
 	for field, val := range updateMap {
 		//reset object value slice
+		//isHashMap = false
+		subSql = ""
 		objectValSlice = objectValSlice[:0]
 		fmt.Println("field:", field, ", val:", val, ", type:", reflect.TypeOf(val))
 
 		//check value kind
 		//if hash map, need convert to json object kind
-		v, isHashMap := val.(map[string]interface{})
-		if isHashMap {
-			//convert hash map into json object
-			tempStr, objectValSlice = d.GenJsonObject(v)
-			tempStr = fmt.Sprintf(",'$.%s', %s", field, tempStr)
-		}else {
-			//tempStr = fmt.Sprintf(",'$.%s', ?", field)
-			switch val.(type) {
-			case float64:
-				objDefaultVal = 0.0
-			case int64:
-				objDefaultVal = 0
-			case int:
-				objDefaultVal = 0
-			case bool:
-				objDefaultVal = false
-			case string:
-				objDefaultVal = "''"
-			default:
+		switch val.(type) {
+		case float64:
+			objDefaultVal = 0.0
+		case int64:
+			objDefaultVal = 0
+		case int:
+			objDefaultVal = 0
+		case bool:
+			objDefaultVal = false
+		case string:
+			objDefaultVal = "''"
+		case []interface{}:
+			{
+				objDefaultVal = "JSON_ARRAY()"
+				genSlice, isOk = val.([]interface{})
+				if isOk {
+					subSql, objectValSlice = d.GenJsonArray(genSlice)
+				}
+			}
+		case map[string]interface{}:
+			{
+				objDefaultVal = "JSON_OBJECT()"
+				genMap, isOk = val.(map[string]interface{})
+				if isOk {
+					subSql, objectValSlice = d.GenJsonObject(genMap)
+				}
+			}
+		default:
+			{
 				objDefaultVal = "JSON_OBJECT()"
 			}
-			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
-								  ",'$.%s', ?",
-							field, objField, field, objDefaultVal, field)
 		}
-		if isHashMap {
+
+		//format sub sql
+		if subSql != "" {
+			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
+				",'$.%s', %s", field, objField, field,
+				objDefaultVal, field, subSql)
 			values = append(values, objectValSlice...)
 		}else{
+			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
+				",'$.%s', ?", field, objField, field,
+				objDefaultVal, field)
 			values = append(values, val)
 		}
+
+		//v, isHashMap := val.(map[string]interface{})
+		//if isHashMap {
+		//	//convert hash map into json object
+		//	tempStr, objectValSlice = d.GenJsonObject(v)
+		//	tempStr = fmt.Sprintf(",'$.%s', %s", field, tempStr)
+		//}else {
+		//	switch val.(type) {
+		//	case float64:
+		//		objDefaultVal = 0.0
+		//	case int64:
+		//		objDefaultVal = 0
+		//	case int:
+		//		objDefaultVal = 0
+		//	case bool:
+		//		objDefaultVal = false
+		//	case string:
+		//		objDefaultVal = "''"
+		//	default:
+		//		objDefaultVal = "JSON_OBJECT()"
+		//	}
+		//	tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
+		//						  ",'$.%s', ?",
+		//						  field, objField, field, objDefaultVal, field)
+		//}
+		//if isHashMap {
+		//	values = append(values, objectValSlice...)
+		//}else{
+		//	values = append(values, val)
+		//}
 		updateBuffer.WriteString(tempStr)
 	}
 	updateBuffer.WriteString(")")
