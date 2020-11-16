@@ -662,8 +662,10 @@ func (d *BaseMysql) UpdateOneDataAdv(
 				objDefaultVal = 0
 			case bool:
 				objDefaultVal = false
-			default:
+			case string:
 				objDefaultVal = "''"
+			default:
+				objDefaultVal = "JSON_OBJECT()"
 			}
 			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
 								  ",'$.%s', ?",
