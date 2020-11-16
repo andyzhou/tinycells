@@ -6,6 +6,7 @@ import (
 	"github.com/andyzhou/tinycells/db"
 	"github.com/andyzhou/tinycells/tc"
 	"log"
+	"reflect"
 	"runtime/debug"
 	"strconv"
 )
@@ -642,7 +643,7 @@ func (d *BaseMysql) UpdateOneDataAdv(
 	for field, val := range updateMap {
 		//reset object value slice
 		objectValSlice = objectValSlice[:0]
-		//fmt.Println("field:", field, ", val:", val, ", type:", reflect.TypeOf(val))
+		fmt.Println("field:", field, ", val:", val, ", type:", reflect.TypeOf(val))
 
 		//check value kind
 		//if hash map, need convert to json object kind
