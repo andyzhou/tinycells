@@ -1,6 +1,7 @@
 package data
 
 import (
+	"ask/define"
 	"bytes"
 	"fmt"
 	"github.com/andyzhou/tinycells/db"
@@ -766,6 +767,8 @@ func (d *BaseMysql) UpdateOneDataAdv(
 	return true
 }
 
+
+ //add new data
 func (d *BaseMysql) AddData(
 				jsonByte []byte,
 				table string,
@@ -776,16 +779,67 @@ func (d *BaseMysql) AddData(
 		return false
 	}
 
-	//format sql
-	sql := fmt.Sprintf("INSERT INTO %s(data)  VALUES(?)", table)
-	values := []interface{}{
-		jsonByte,
+	//format data map
+	dataMap := map[string][]byte {
+		define.TabFieldData:jsonByte,
 	}
 
+	//call base func
+	return d.AddDataAdv(
+				dataMap,
+				table,
+				db,
+			)
+}
+
+
+//add data
+//support multi json data fields
+func (d *BaseMysql) AddDataAdv(
+				dataMap map[string][]byte,
+				table string,
+				db *db.Mysql,
+			) bool {
+	var (
+		buffer = bytes.NewBuffer(nil)
+		valueBuffer = bytes.NewBuffer(nil)
+		values = make([]interface{}, 0)
+		tempStr string
+	)
+
+	//basic check
+	if dataMap == nil || db == nil {
+		return false
+	}
+
+	tempStr = fmt.Sprintf("INSERT INTO %s(", table)
+	buffer.WriteString(tempStr)
+	valueBuffer.WriteString(" VALUES(")
+
+	i := 0
+	for k, v := range dataMap {
+		if i > 0 {
+			buffer.WriteString(",")
+			valueBuffer.WriteString(",")
+		}
+		tempStr = fmt.Sprintf("?")
+		valueBuffer.WriteString(tempStr)
+
+		tempStr = fmt.Sprintf("%s", k)
+		buffer.WriteString(tempStr)
+		values = append(values, v)
+		i++
+	}
+	valueBuffer.WriteString(")")
+
+
+	buffer.WriteString(")")
+	buffer.WriteString(valueBuffer.String())
+
 	//save into db
-	_, _, err := db.Execute(sql, values...)
+	_, _, err := db.Execute(buffer.String(), values...)
 	if err != nil {
-		log.Println("BaseMysql::AddData failed, err:", err.Error())
+		log.Println("BaseMysql::AddDataAdv failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
 		return false
 	}
