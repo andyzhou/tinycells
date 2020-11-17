@@ -1,7 +1,6 @@
 package data
 
 import (
-	"ask/define"
 	"bytes"
 	"fmt"
 	"github.com/andyzhou/tinycells/db"
