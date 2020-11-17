@@ -780,7 +780,7 @@ func (d *BaseMysql) AddData(
 
 	//format data map
 	dataMap := map[string][]byte {
-		define.TabFieldData:jsonByte,
+		TableFieldOfData:jsonByte,
 	}
 
 	//call base func
