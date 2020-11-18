@@ -444,16 +444,16 @@ func (d *BaseMysql) DelData(
 }
 
 //update one base data
-func (d *BaseMysql) UpdateOneBaseData(
+func (d *BaseMysql) UpdateBaseData(
 					dataByte []byte,
 					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
 				) bool {
-	return d.UpdateOneBaseDataAdv("", dataByte, whereMap, table, db)
+	return d.UpdateBaseDataAdv("", dataByte, whereMap, table, db)
 }
 
-func (d *BaseMysql) UpdateOneBaseDataAdv(
+func (d *BaseMysql) UpdateBaseDataAdv(
 					dataField string,
 					dataByte []byte,
 					whereMap map[string]WherePara,
@@ -502,13 +502,13 @@ func (d *BaseMysql) UpdateOneBaseDataAdv(
 }
 
 //increase or decrease field value
-func (d *BaseMysql) UpdateCountOfOneData(
+func (d *BaseMysql) UpdateCountOfData(
 					updateMap map[string]interface{},
 					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
 				) bool {
-	return d.UpdateCountOfOneDataAdv(
+	return d.UpdateCountOfDataAdv(
 			updateMap,
 			whereMap,
 			"data",
@@ -516,7 +516,7 @@ func (d *BaseMysql) UpdateCountOfOneData(
 			db,
 		)
 }
-func (d *BaseMysql) UpdateCountOfOneDataAdv(
+func (d *BaseMysql) UpdateCountOfDataAdv(
 					updateMap map[string]interface{},
 					whereMap map[string]WherePara,
 					objField string,
@@ -587,15 +587,15 @@ func (d *BaseMysql) UpdateCountOfOneDataAdv(
 	return true
 }
 
-//update one data
-func (d *BaseMysql) UpdateOneData(
+//update data
+func (d *BaseMysql) UpdateData(
 				updateMap map[string]interface{},
 				ObjArrMap map[string][]interface{},
 				whereMap map[string]WherePara,
 				table string,
 				db *db.Mysql,
 			) bool {
-	return d.UpdateOneDataAdv(
+	return d.UpdateDataAdv(
 			updateMap,
 			ObjArrMap,
 			whereMap,
@@ -605,7 +605,7 @@ func (d *BaseMysql) UpdateOneData(
 		)
 }
 
-func (d *BaseMysql) UpdateOneDataAdv(
+func (d *BaseMysql) UpdateDataAdv(
 				updateMap map[string]interface{},
 				objArrMap map[string][]interface{},
 				whereMap map[string]WherePara,
@@ -699,36 +699,6 @@ func (d *BaseMysql) UpdateOneDataAdv(
 				objDefaultVal, field)
 			values = append(values, val)
 		}
-
-		//v, isHashMap := val.(map[string]interface{})
-		//if isHashMap {
-		//	//convert hash map into json object
-		//	tempStr, objectValSlice = d.GenJsonObject(v)
-		//	tempStr = fmt.Sprintf(",'$.%s', %s", field, tempStr)
-		//}else {
-		//	switch val.(type) {
-		//	case float64:
-		//		objDefaultVal = 0.0
-		//	case int64:
-		//		objDefaultVal = 0
-		//	case int:
-		//		objDefaultVal = 0
-		//	case bool:
-		//		objDefaultVal = false
-		//	case string:
-		//		objDefaultVal = "''"
-		//	default:
-		//		objDefaultVal = "JSON_OBJECT()"
-		//	}
-		//	tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v)" +
-		//						  ",'$.%s', ?",
-		//						  field, objField, field, objDefaultVal, field)
-		//}
-		//if isHashMap {
-		//	values = append(values, objectValSlice...)
-		//}else{
-		//	values = append(values, val)
-		//}
 		updateBuffer.WriteString(tempStr)
 	}
 	updateBuffer.WriteString(")")
