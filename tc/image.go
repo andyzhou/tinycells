@@ -408,23 +408,3 @@ func (i *ImageResize) LoadImage(filePath string) image.Image {
 	}
 	return img
 }
-//
-////read image original file
-//func (i *ImageResize) ReadImage(filePath string, needRemove bool) (bool, []byte) {
-//	if filePath == "" {
-//		return false, nil
-//	}
-//
-//	//try read file
-//	byteData, err := ioutil.ReadFile(filePath)
-//	if err != nil {
-//		log.Println("ImageResize::ReadImage failed, err:", err.Error())
-//		return false, nil
-//	}
-//
-//	if needRemove {
-//		os.Remove(filePath)
-//	}
-//
-//	return true, byteData
-//}
