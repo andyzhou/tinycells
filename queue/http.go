@@ -32,7 +32,7 @@ const (
 //inter macro define
 const (
 	HttpClientTimeOut = 5
-	HttpReqChanSize = 128
+	HttpReqChanSize = 256
 )
 
 //http file para
@@ -63,9 +63,19 @@ type HttpQueue struct {
 
 //construct
 func NewHttpQueue() *HttpQueue {
+	return NewHttpQueueWithChanSize(0)
+}
+
+func NewHttpQueueWithChanSize(reqChanSize int) *HttpQueue {
+	//check or init request chan size
+	realReqChanSize := reqChanSize
+	if realReqChanSize <= 0 {
+		realReqChanSize = HttpReqChanSize
+	}
+
 	//self init
 	this := &HttpQueue{
-		reqChan:make(chan HttpReq, HttpReqChanSize),
+		reqChan:make(chan HttpReq, realReqChanSize),
 		closeChan:make(chan bool, 1),
 	}
 
@@ -135,6 +145,15 @@ func (q *HttpQueue) runMainProcess() {
 		resp = make([]byte, 0)
 		needQuit, isOk bool
 	)
+
+	//defer
+	defer func() {
+		//close chan
+		close(q.reqChan)
+		close(q.closeChan)
+	}()
+
+	//loop
 	for {
 		if needQuit && len(q.reqChan) <= 0 {
 			break
@@ -154,9 +173,6 @@ func (q *HttpQueue) runMainProcess() {
 			needQuit = true
 		}
 	}
-	//close chan
-	close(q.reqChan)
-	close(q.closeChan)
 }
 
 //upload file request

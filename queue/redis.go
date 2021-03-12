@@ -19,7 +19,7 @@ import (
 
  //inter macro define
  const (
-	RedisReqChanSize = 128
+	RedisReqChanSize = 256
  )
 
  //inter request and response
@@ -62,13 +62,23 @@ import (
 
 //construct
 func NewRedisQueue(gRedis *tc.GRedis) *RedisQueue {
+	return NewRedisQueueWithChanSize(gRedis, 0)
+}
+
+func NewRedisQueueWithChanSize(gRedis *tc.GRedis, reqChanSize int) *RedisQueue {
+	//check or init request chan size
+	realReqChanSize := reqChanSize
+	if realReqChanSize <= 0 {
+		realReqChanSize = RedisReqChanSize
+	}
+
 	//self init
 	this := &RedisQueue{
 		gRedis:gRedis,
-		reqChan:make(chan RedisReq, RedisReqChanSize),
-		luaReqChan:make(chan RedisLuaReq, RedisReqChanSize),
-		lockerReqChan:make(chan RedisLockerReq, RedisReqChanSize),
-		closeChan:make(chan bool),
+		reqChan:make(chan RedisReq, realReqChanSize),
+		luaReqChan:make(chan RedisLuaReq, realReqChanSize),
+		lockerReqChan:make(chan RedisLockerReq, realReqChanSize),
+		closeChan:make(chan bool, 1),
 	}
 
 	//spawn main process
@@ -350,6 +360,16 @@ func (q *RedisQueue) runMainProcess() {
 		resp = &RedisResp{}
 		isOk, needQuit bool
 	)
+
+	//defer
+	defer func() {
+		//close chan
+		close(q.reqChan)
+		close(q.luaReqChan)
+		close(q.lockerReqChan)
+		close(q.closeChan)
+	}()
+
 	//loop receive
 	for {
 		if needQuit && len(q.reqChan) <= 0 && len(q.luaReqChan) <= 0 {
@@ -381,9 +401,4 @@ func (q *RedisQueue) runMainProcess() {
 			needQuit = true
 		}
 	}
-	//close chan
-	close(q.reqChan)
-	close(q.luaReqChan)
-	close(q.lockerReqChan)
-	close(q.closeChan)
 }
