@@ -491,8 +491,8 @@ func (u *Utils) GetCurMinuteInt() int {
 //convert date time string to timestamp
 func (u *Utils) DateTime2Unix(dateTime string) int64 {
 	//remove un useful info
-	dateTime = strings.ReplaceAll(dateTime, "T", " ")
-	dateTime = strings.ReplaceAll(dateTime, "Z", "")
+	dateTime = strings.Replace(dateTime, "T", " ", -1)
+	dateTime = strings.Replace(dateTime, "Z", "", -1)
 
 	//theTime, err := time.Parse(TimeLayOut, dateTime)
 	theTime, err := time.ParseInLocation(TimeLayOut, dateTime, time.Local)
