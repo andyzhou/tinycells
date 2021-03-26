@@ -237,6 +237,9 @@ func (q *RedisQueue) processLuaRequest(req *RedisLuaReq) *RedisResp {
 						req.Args...,
 					).Result()
 
+	if err != nil && err == redis.Nil {
+		log.Println("key dose not exists")
+	}
 	//set return value
 	resp.Resp = respVal
 	resp.Err = err
