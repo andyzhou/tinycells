@@ -17,7 +17,7 @@ import (
 
  //inter macro define
  const (
- 	MysqlReqChanSize = 128
+ 	MysqlReqChanSize = 256
  )
 
  //inter request and response
@@ -46,11 +46,21 @@ import (
  
  //construct
 func NewMysqlQueue(db *tc.DBService) *MysqlQueue {
+	return NewMysqlQueueWitchChanSize(db, 0)
+}
+
+func NewMysqlQueueWitchChanSize(db *tc.DBService, reqChanSize int) *MysqlQueue {
+	//check or init request chan size
+	realReqChanSize := reqChanSize
+	if realReqChanSize <= 0 {
+		realReqChanSize = MysqlReqChanSize
+	}
+
 	//self init
 	this := &MysqlQueue{
 		db:db,
-		reqChan:make(chan MysqlReq, MysqlReqChanSize),
-		closeChan:make(chan bool),
+		reqChan:make(chan MysqlReq, realReqChanSize),
+		closeChan:make(chan bool, 1),
 	}
 
 	//spawn main process
@@ -164,6 +174,15 @@ func (q *MysqlQueue) runMainProcess() {
 		resp = &MysqlResp{}
 		isOk, needQuit bool
 	)
+
+	//defer
+	defer func() {
+		//close relate chan
+		close(q.reqChan)
+		close(q.closeChan)
+	}()
+
+	//loop
 	for {
 		if needQuit && len(q.reqChan) == 0 {
 			break
@@ -183,7 +202,4 @@ func (q *MysqlQueue) runMainProcess() {
 			needQuit = true
 		}
 	}
-	//close relate chan
-	close(q.reqChan)
-	close(q.closeChan)
 }

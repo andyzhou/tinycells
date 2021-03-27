@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/andyzhou/tinycells/tc"
@@ -19,7 +20,7 @@ import (
 
  //inter macro define
  const (
-	RedisReqChanSize = 128
+	RedisReqChanSize = 256
  )
 
  //inter request and response
@@ -62,13 +63,23 @@ import (
 
 //construct
 func NewRedisQueue(gRedis *tc.GRedis) *RedisQueue {
+	return NewRedisQueueWithChanSize(gRedis, 0)
+}
+
+func NewRedisQueueWithChanSize(gRedis *tc.GRedis, reqChanSize int) *RedisQueue {
+	//check or init request chan size
+	realReqChanSize := reqChanSize
+	if realReqChanSize <= 0 {
+		realReqChanSize = RedisReqChanSize
+	}
+
 	//self init
 	this := &RedisQueue{
 		gRedis:gRedis,
-		reqChan:make(chan RedisReq, RedisReqChanSize),
-		luaReqChan:make(chan RedisLuaReq, RedisReqChanSize),
-		lockerReqChan:make(chan RedisLockerReq, RedisReqChanSize),
-		closeChan:make(chan bool),
+		reqChan:make(chan RedisReq, realReqChanSize),
+		luaReqChan:make(chan RedisLuaReq, realReqChanSize),
+		lockerReqChan:make(chan RedisLockerReq, realReqChanSize),
+		closeChan:make(chan bool, 1),
 	}
 
 	//spawn main process
@@ -185,7 +196,7 @@ func (q *RedisQueue) processRequest(req *RedisReq) *RedisResp {
 	args = append(args, req.ParaSlice...)
 
 	//execute command
-	genVal, err := client.Do(args...).Result()
+	genVal, err := client.Do(context.Background(), args...).Result()
 
 	//set key expire seconds
 	if err != nil && req.ExpireSeconds > 0 {
@@ -194,7 +205,7 @@ func (q *RedisQueue) processRequest(req *RedisReq) *RedisResp {
 			if isOk {
 				timeEnd := time.Now().Unix() + req.ExpireSeconds
 				timeDuration := time.Duration(timeEnd) * time.Second
-				client.Expire(redisKey, timeDuration).Result()
+				client.Expire(context.Background(), redisKey, timeDuration).Result()
 			}
 		}
 	}
@@ -220,11 +231,15 @@ func (q *RedisQueue) processLuaRequest(req *RedisLuaReq) *RedisResp {
 	//init lua script
 	script := redis.NewScript(req.Script)
 	respVal, err := script.Run(
+						context.Background(),
 						q.gRedis.GetClient(),
 						req.Keys,
 						req.Args...,
 					).Result()
 
+	if err != nil && err == redis.Nil {
+		log.Println("key dose not exists")
+	}
 	//set return value
 	resp.Resp = respVal
 	resp.Err = err
@@ -293,7 +308,7 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 		req.Key,
 	}
 	script := redis.NewScript(luaScript)
-	respVal, err := script.Run(client, keys, value, now).Result()
+	respVal, err := script.Run(context.Background(), client, keys, value, now).Result()
 
 	//set return value
 	resp.Resp = respVal
@@ -304,7 +319,7 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 	////////////
 	//general mode
 	////////////
-	bRet, err := client.SetNX(req.Key, value, 0).Result()
+	bRet, err := client.SetNX(context.Background(), req.Key, value, 0).Result()
 	if err != nil {
 		resp.Err = err
 		return resp
@@ -317,7 +332,7 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 	}
 
 	//try get locker
-	lockerTimeStr, err := client.Get(req.Key).Result()
+	lockerTimeStr, err := client.Get(context.Background(), req.Key).Result()
 	if err != nil {
 		resp.Err = err
 		return resp
@@ -327,8 +342,8 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 	lockerTimeInt, _ := strconv.ParseInt(lockerTimeStr, 10, 64)
 	if lockerTimeInt < now {
 		//try reset locker
-		client.Del(req.Key)
-		bRet, err = client.SetNX(req.Key, value, 0).Result()
+		client.Del(context.Background(), req.Key)
+		bRet, err = client.SetNX(context.Background(), req.Key, value, 0).Result()
 		if err != nil {
 			resp.Err = err
 			return resp
@@ -350,6 +365,16 @@ func (q *RedisQueue) runMainProcess() {
 		resp = &RedisResp{}
 		isOk, needQuit bool
 	)
+
+	//defer
+	defer func() {
+		//close chan
+		close(q.reqChan)
+		close(q.luaReqChan)
+		close(q.lockerReqChan)
+		close(q.closeChan)
+	}()
+
 	//loop receive
 	for {
 		if needQuit && len(q.reqChan) <= 0 && len(q.luaReqChan) <= 0 {
@@ -381,9 +406,4 @@ func (q *RedisQueue) runMainProcess() {
 			needQuit = true
 		}
 	}
-	//close chan
-	close(q.reqChan)
-	close(q.luaReqChan)
-	close(q.lockerReqChan)
-	close(q.closeChan)
 }
