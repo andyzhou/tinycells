@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"github.com/andyzhou/tinycells/tc"
@@ -196,7 +195,7 @@ func (q *RedisQueue) processRequest(req *RedisReq) *RedisResp {
 	args = append(args, req.ParaSlice...)
 
 	//execute command
-	genVal, err := client.Do(context.Background(), args...).Result()
+	genVal, err := client.Do(args...).Result()
 
 	//set key expire seconds
 	if err != nil && req.ExpireSeconds > 0 {
@@ -205,7 +204,7 @@ func (q *RedisQueue) processRequest(req *RedisReq) *RedisResp {
 			if isOk {
 				timeEnd := time.Now().Unix() + req.ExpireSeconds
 				timeDuration := time.Duration(timeEnd) * time.Second
-				client.Expire(context.Background(), redisKey, timeDuration).Result()
+				client.Expire(redisKey, timeDuration).Result()
 			}
 		}
 	}
@@ -231,7 +230,6 @@ func (q *RedisQueue) processLuaRequest(req *RedisLuaReq) *RedisResp {
 	//init lua script
 	script := redis.NewScript(req.Script)
 	respVal, err := script.Run(
-						context.Background(),
 						q.gRedis.GetClient(),
 						req.Keys,
 						req.Args...,
@@ -308,7 +306,7 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 		req.Key,
 	}
 	script := redis.NewScript(luaScript)
-	respVal, err := script.Run(context.Background(), client, keys, value, now).Result()
+	respVal, err := script.Run(client, keys, value, now).Result()
 
 	//set return value
 	resp.Resp = respVal
@@ -319,7 +317,7 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 	////////////
 	//general mode
 	////////////
-	bRet, err := client.SetNX(context.Background(), req.Key, value, 0).Result()
+	bRet, err := client.SetNX(req.Key, value, 0).Result()
 	if err != nil {
 		resp.Err = err
 		return resp
@@ -332,7 +330,7 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 	}
 
 	//try get locker
-	lockerTimeStr, err := client.Get(context.Background(), req.Key).Result()
+	lockerTimeStr, err := client.Get(req.Key).Result()
 	if err != nil {
 		resp.Err = err
 		return resp
@@ -342,8 +340,8 @@ func (q *RedisQueue) processLockerRequest(req *RedisLockerReq) *RedisResp {
 	lockerTimeInt, _ := strconv.ParseInt(lockerTimeStr, 10, 64)
 	if lockerTimeInt < now {
 		//try reset locker
-		client.Del(context.Background(), req.Key)
-		bRet, err = client.SetNX(context.Background(), req.Key, value, 0).Result()
+		client.Del(req.Key)
+		bRet, err = client.SetNX(req.Key, value, 0).Result()
 		if err != nil {
 			resp.Err = err
 			return resp
