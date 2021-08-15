@@ -79,7 +79,6 @@ func NewMongoDB(account *MongoAccount) *MongoDB {
 func (d *MongoDB) GetBatchDocs(collectName string, filter, jsonObj interface{},
 				optionSlice []*options.FindOptions) ([][]byte, error) {
 	var (
-		//tempByteData = make([]byte, 0)
 		result = make([][]byte, 0)
 		err error
 	)
@@ -118,7 +117,10 @@ func (d *MongoDB) GetBatchDocs(collectName string, filter, jsonObj interface{},
 		}
 		//add json object into slice
 		byteData := make([]byte, 0)
-		byteData = d.Encode(jsonObj)
+		byteData, err = d.Encode(jsonObj)
+		if err != nil {
+			continue
+		}
 		result = append(result, byteData)
 		byteData = byteData[:0]
 	}
@@ -148,7 +150,10 @@ func (d *MongoDB) GetOneDoc(collectName string, filter, jsonObj interface{}) ([]
 	//get batch doc
 	//cur, err := collection.Find(d.genCtx, bson.D{})
 	resp := collection.FindOne(genCtx, filter)
-	if resp == nil || resp.Err() != nil {
+	if resp == nil {
+		return nil, errors.New("invalid response")
+	}
+	if resp.Err() != nil {
 		return nil, resp.Err()
 	}
 
@@ -160,8 +165,8 @@ func (d *MongoDB) GetOneDoc(collectName string, filter, jsonObj interface{}) ([]
 
 	//encode json object into byte
 	byteData := make([]byte, 0)
-	byteData = d.Encode(jsonObj)
-	return byteData, nil
+	byteData, err = d.Encode(jsonObj)
+	return byteData, err
 }
 
 //delete batch docs
