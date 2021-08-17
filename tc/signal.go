@@ -55,7 +55,6 @@ func NewSignalWithPara(waitSeconds int) *Signal {
 
 //monitor signal, step-3
 func (f *Signal) MonSignal() {
-	log.Printf("Signal:MonSignal..")
 	//signal notify
 	signal.Notify(
 		f.ch,
@@ -98,8 +97,6 @@ func (f *Signal) ForceNotify() {
 	if f.shutDownChan == nil {
 		return
 	}
-
-	log.Printf("Signal:ForceNotify, chan total:%v", len(f.shutDownChan))
 	//send notify to relate chan
 	for _, ch := range f.shutDownChan {
 		ch <- true
@@ -137,14 +134,12 @@ func (f *Signal) RegisterShutDownChan(chArr ... chan bool) bool {
 
 //force quit
 func (f *Signal) forceQuit() {
-	log.Printf("Signal:forceQuit..")
 	f.notifyShutDownChan()
 	os.Exit(-1)
 }
 
 //exit
 func (f *Signal) onExit(msg os.Signal) {
-	log.Printf("Signal:onExit..")
 	f.notifyShutDownChan()
 	<- f.stopSig
 	os.Exit(-1)
@@ -157,7 +152,6 @@ func (f *Signal) notifyShutDownChan() {
 		return
 	}
 
-	log.Printf("Signal:notifyShutDownChan, chan total:%v", len(f.shutDownChan))
 	//send notify to relate chan
 	for _, ch := range f.shutDownChan {
 		ch <- true
