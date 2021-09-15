@@ -2,6 +2,7 @@ package data
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/andyzhou/tinycells/db"
 	"github.com/andyzhou/tinycells/tc"
@@ -131,9 +132,9 @@ func (d *BaseMysql) GetBatchData(
 				size int,
 				table string,
 				db *db.Mysql,
-			) [][]byte {
+			) ([][]byte, error) {
 
-	recordsMap := d.GetBatchDataAdv(
+	recordsMap, err := d.GetBatchDataAdv(
 				"",
 				whereMap,
 				orderBy,
@@ -143,8 +144,11 @@ func (d *BaseMysql) GetBatchData(
 				db,
 			)
 	//check records map
+	if err != nil {
+		return nil, err
+	}
 	if recordsMap == nil || len(recordsMap) <= 0 {
-		return nil
+		return nil, nil
 	}
 
 	//init result
@@ -158,7 +162,7 @@ func (d *BaseMysql) GetBatchData(
 		}
 		result = append(result, jsonByte)
 	}
-	return result
+	return result, nil
 }
 
 func (d *BaseMysql) GetBatchDataAdv(
@@ -169,7 +173,7 @@ func (d *BaseMysql) GetBatchDataAdv(
 				size int,
 				table string,
 				db *db.Mysql,
-			) []map[string]interface{} {
+			) ([]map[string]interface{}, error) {
 	var (
 		limitSql, orderBySql string
 		values = make([]interface{}, 0)
@@ -177,7 +181,7 @@ func (d *BaseMysql) GetBatchDataAdv(
 
 	//basic check
 	if table == "" || db == nil {
-		return nil
+		return nil, errors.New("invalid paramter")
 	}
 
 	if selectFields == "" {
@@ -214,15 +218,15 @@ func (d *BaseMysql) GetBatchDataAdv(
 	if err != nil {
 		log.Println("BaseMysql::GetBathData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return nil
+		return nil, err
 	}
 
 	//check records map
 	if recordsMap == nil || len(recordsMap) <= 0 {
-		return nil
+		return nil, nil
 	}
 
-	return recordsMap
+	return recordsMap, nil
 }
 
 //get batch random data
@@ -231,7 +235,7 @@ func (d *BaseMysql) GetBathRandomData(
 						size int,
 						table string,
 						db *db.Mysql,
-					) [][]byte {
+					) ([][]byte, error) {
 	var (
 		limitSql string
 		values = make([]interface{}, 0)
@@ -239,7 +243,7 @@ func (d *BaseMysql) GetBathRandomData(
 
 	//basic check
 	if table == "" || db == nil {
-		return nil
+		return nil, errors.New("invalid parameter")
 	}
 
 	//format limit sql
@@ -265,12 +269,12 @@ func (d *BaseMysql) GetBathRandomData(
 	if err != nil {
 		log.Println("BaseMysql::GetBathRandomData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return nil
+		return nil, err
 	}
 
 	//check records map
 	if recordsMap == nil || len(recordsMap) <= 0 {
-		return nil
+		return nil, nil
 	}
 
 	//init result
@@ -284,7 +288,7 @@ func (d *BaseMysql) GetBathRandomData(
 		}
 		result = append(result, jsonByte)
 	}
-	return result
+	return result, nil
 }
 
  //get one data
@@ -295,28 +299,31 @@ func (d *BaseMysql) GetOneData(
 				needRand bool,
 				table string,
 				db *db.Mysql,
-			) []byte {
+			) ([]byte, error) {
 	if dataField == "" {
 		dataField = "data"
 	}
 	dataFields := []string{
 		dataField,
 	}
-	byteMap := d.GetOneDataAdv(
+	byteMap, err := d.GetOneDataAdv(
 			dataFields,
 			whereMap,
 			needRand,
 			table,
 			db,
 		)
+	if err != nil {
+		return nil, err
+	}
 	if byteMap == nil {
-		return nil
+		return nil, nil
 	}
 	v, ok := byteMap[dataField]
 	if !ok {
-		return nil
+		return nil, nil
 	}
-	return v
+	return v, nil
 }
 
 func (d *BaseMysql) GetOneDataAdv(
@@ -325,7 +332,7 @@ func (d *BaseMysql) GetOneDataAdv(
 				needRand bool,
 				table string,
 				db *db.Mysql,
-			) map[string][]byte {
+			) (map[string][]byte, error) {
 	var (
 		//assignedDataField string
 		dataFieldBuffer = bytes.NewBuffer(nil)
@@ -335,7 +342,7 @@ func (d *BaseMysql) GetOneDataAdv(
 
 	//basic check
 	if table == "" || db == nil {
-		return nil
+		return nil, errors.New("invalid parameter")
 	}
 
 	//format where sql
@@ -374,12 +381,12 @@ func (d *BaseMysql) GetOneDataAdv(
 	if err != nil {
 		log.Println("BaseMysql::GetOneData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return nil
+		return nil, err
 	}
 
 	//check record map
 	if recordMap == nil || len(recordMap) <= 0 {
-		return nil
+		return nil, nil
 	}
 
 	//format result
@@ -392,7 +399,7 @@ func (d *BaseMysql) GetOneDataAdv(
 			result[dataField] = jsonByte
 		}
 	}
-	return result
+	return result, nil
 }
 
 
@@ -401,7 +408,7 @@ func (d *BaseMysql) DelOneData(
 				whereMap map[string]WherePara,
 				table string,
 				db *db.Mysql,
-			) bool {
+			) error {
 	return d.DelData(
 			whereMap,
 			table,
@@ -413,14 +420,14 @@ func (d *BaseMysql) DelData(
 				whereMap map[string]WherePara,
 				table string,
 				db *db.Mysql,
-			) bool {
+			) error {
 	var (
 		values = make([]interface{}, 0)
 	)
 
 	//basic check
 	if whereMap == nil || table == "" || db == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	//format where sql
@@ -437,10 +444,10 @@ func (d *BaseMysql) DelData(
 	if err != nil {
 		log.Println("BaseMysql::DelOneData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }
 
 //update one base data
@@ -449,7 +456,7 @@ func (d *BaseMysql) UpdateBaseData(
 					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
-				) bool {
+				) error {
 	return d.UpdateBaseDataAdv("", dataByte, whereMap, table, db)
 }
 
@@ -459,7 +466,7 @@ func (d *BaseMysql) UpdateBaseDataAdv(
 					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
-				) bool {
+				) error {
 	var (
 		whereBuffer = bytes.NewBuffer(nil)
 		values = make([]interface{}, 0)
@@ -468,7 +475,7 @@ func (d *BaseMysql) UpdateBaseDataAdv(
 	//basic check
 	if dataByte == nil || whereMap == nil ||
 	   table == "" || db == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	if dataField == "" {
@@ -496,9 +503,9 @@ func (d *BaseMysql) UpdateBaseDataAdv(
 	if err != nil {
 		log.Println("BaseMysql::UpdateOneBaseData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 //increase or decrease field value
@@ -507,7 +514,7 @@ func (d *BaseMysql) UpdateCountOfData(
 					whereMap map[string]WherePara,
 					table string,
 					db *db.Mysql,
-				) bool {
+				) error {
 	return d.UpdateCountOfDataAdv(
 			updateMap,
 			whereMap,
@@ -522,7 +529,7 @@ func (d *BaseMysql) UpdateCountOfDataAdv(
 					objField string,
 					table string,
 					db *db.Mysql,
-				) bool {
+				) error {
 	var (
 		tempStr string
 		updateBuffer = bytes.NewBuffer(nil)
@@ -534,11 +541,11 @@ func (d *BaseMysql) UpdateCountOfDataAdv(
 	//basic check
 	if updateMap == nil || whereMap == nil ||
 		table == "" || db == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	if len(updateMap) <= 0 || len(whereMap) <= 0 {
-		return false
+		return errors.New("update map is nil")
 	}
 
 	if objField == "" {
@@ -582,9 +589,9 @@ func (d *BaseMysql) UpdateCountOfDataAdv(
 	if err != nil {
 		log.Println("BaseMysql::UpdateCountOfOneData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 //update data
@@ -594,7 +601,7 @@ func (d *BaseMysql) UpdateData(
 				whereMap map[string]WherePara,
 				table string,
 				db *db.Mysql,
-			) bool {
+			) error {
 	return d.UpdateDataAdv(
 			updateMap,
 			ObjArrMap,
@@ -612,7 +619,7 @@ func (d *BaseMysql) UpdateDataAdv(
 				objField string,
 				table string,
 				db *db.Mysql,
-			) bool {
+			) error {
 	var (
 		tempStr string
 		updateBuffer = bytes.NewBuffer(nil)
@@ -630,11 +637,11 @@ func (d *BaseMysql) UpdateDataAdv(
 	//basic check
 	if updateMap == nil || whereMap == nil ||
 	   table == "" || db == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	if len(updateMap) <= 0 || len(whereMap) <= 0 {
-		return false
+		return errors.New("update map is nil")
 	}
 
 	if objField == "" {
@@ -731,9 +738,9 @@ func (d *BaseMysql) UpdateDataAdv(
 	if err != nil {
 		log.Println("BaseMysql::UpdateOneData failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return false
+		return err
 	}
-	return true
+	return nil
 }
 
 
@@ -742,10 +749,10 @@ func (d *BaseMysql) AddData(
 				jsonByte []byte,
 				table string,
 				db *db.Mysql,
-			) bool {
+			) error {
 	//basic check
 	if jsonByte == nil || db == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	//format data map
@@ -768,7 +775,7 @@ func (d *BaseMysql) AddDataAdv(
 				dataMap map[string][]byte,
 				table string,
 				db *db.Mysql,
-			) bool {
+			) error {
 	var (
 		buffer = bytes.NewBuffer(nil)
 		valueBuffer = bytes.NewBuffer(nil)
@@ -778,7 +785,7 @@ func (d *BaseMysql) AddDataAdv(
 
 	//basic check
 	if dataMap == nil || db == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	tempStr = fmt.Sprintf("INSERT INTO %s(", table)
@@ -810,10 +817,10 @@ func (d *BaseMysql) AddDataAdv(
 	if err != nil {
 		log.Println("BaseMysql::AddDataAdv failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }
 
 //add data with on duplicate update
@@ -824,7 +831,7 @@ func (d *BaseMysql) AddDataWithDuplicate(
 						isInc bool,
 						table string,
 						db *db.Mysql,
-					) bool {
+					) error {
 	var (
 		tempStr string
 		updateBuffer = bytes.NewBuffer(nil)
@@ -833,7 +840,7 @@ func (d *BaseMysql) AddDataWithDuplicate(
 
 	//basic check
 	if jsonByte == nil || db == nil || updateMap == nil {
-		return false
+		return errors.New("invalid parameter")
 	}
 
 	//init update buffer
@@ -870,10 +877,10 @@ func (d *BaseMysql) AddDataWithDuplicate(
 	if err != nil {
 		log.Println("BaseMysql::AddDataWithDuplicate failed, err:", err.Error())
 		log.Println("track:", string(debug.Stack()))
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }
 
 //check and get json byte
