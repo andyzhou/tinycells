@@ -19,6 +19,7 @@ import (
 
  //const db field
  const (
+ 	TableFieldOfMax = "max"
  	TableFieldOfTotal = "total"
  	TableFieldOfData = "data" //db data field
  )
@@ -43,7 +44,47 @@ import (
  	tc.Utils
  }
 
- //sum assigned field count
+ //get max value for assigned field
+//field should be integer kind
+func (d *BaseMysql) GetMaxVal(
+						jsonField string,
+						whereMap map[string]WherePara,
+						table string,
+						db *db.Mysql,
+					) (int64, error) {
+	var (
+		values = make([]interface{}, 0)
+		max int64
+	)
+
+	//basic check
+	if jsonField == "" || table == "" || db == nil {
+		return max, errors.New("invalid parameter")
+	}
+
+	//format where sql
+	whereBuffer, whereValues := d.formatWhereSql(whereMap)
+	if whereValues != nil {
+		values = append(values, whereValues...)
+	}
+
+	//format sql
+	sql := fmt.Sprintf("SELECT max(json_extract(data, '$.%s')) as max FROM %s %s",
+		jsonField, table, whereBuffer.String(),
+	)
+
+	//query one record
+	recordMap, err := db.GetRow(sql, values...)
+	if err != nil {
+		log.Println("BaseMysql::GetMaxVal failed, err:", err.Error())
+		log.Println("track:", string(debug.Stack()))
+		return max, err
+	}
+	max = d.getIntegerVal(TableFieldOfMax, recordMap)
+	return max, nil
+}
+
+//sum assigned field count
  //field should be integer kind
 func (d *BaseMysql) SumCount(
 						jsonField string,
@@ -79,7 +120,7 @@ func (d *BaseMysql) SumCount(
 		log.Println("track:", string(debug.Stack()))
 		return total
 	}
-	total = d.getTotalVal(recordMap)
+	total = d.getIntegerVal(TableFieldOfTotal, recordMap)
 	return total
 }
 
@@ -120,7 +161,7 @@ func (d *BaseMysql) GetTotalNum(
 		return total
 	}
 
-	total = d.getTotalVal(recordMap)
+	total = d.getIntegerVal(TableFieldOfTotal, recordMap)
 	return total
 }
 
@@ -924,10 +965,11 @@ func (d *BaseMysql) GetByteDataAdv(
 //private func
 ////////////////
 
-func (d *BaseMysql) getTotalVal(
+func (d *BaseMysql) getIntegerVal(
+						field string,
 						recordMap map[string]interface{},
 					) int64 {
-	v, ok := recordMap[TableFieldOfTotal]
+	v, ok := recordMap[field]
 	if !ok {
 		return 0
 	}
@@ -935,12 +977,12 @@ func (d *BaseMysql) getTotalVal(
 	if !ok {
 		v3, ok := v.(int64)
 		if ok {
-			return int64(v3)
+			return v3
 		}
 		return 0
 	}
-	total, _ := strconv.ParseInt(string(v2), 10, 64)
-	return total
+	intVal, _ := strconv.ParseInt(string(v2), 10, 64)
+	return intVal
 }
 
 func (d *BaseMysql) formatWhereSql(
