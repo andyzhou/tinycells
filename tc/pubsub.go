@@ -8,9 +8,7 @@ import (
 )
 
 /*
- * face of message pub/sub, implement of IPubSub
- * - receive match request message from redis
- * - publish message to channel
+ * face of message pub/sub
  */
 
 //inter macro define
