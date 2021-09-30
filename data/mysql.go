@@ -1011,8 +1011,28 @@ func (d *BaseMysql) formatWhereSql(
 		switch whereKind {
 		case WhereKindOfIn:
 			{
-				tempSlice, ok := wherePara.Val.([]interface{})
-				if ok {
+				tempSlice := make([]interface{}, 0)
+				switch wherePara.Val.(type) {
+				case []interface{}:
+					tempSlice, _ = wherePara.Val.([]interface{})
+				case []int32:
+					for _, v := range wherePara.Val.([]int32) {
+						tempSlice = append(tempSlice, v)
+					}
+				case []int:
+					for _, v := range wherePara.Val.([]int) {
+						tempSlice = append(tempSlice, v)
+					}
+				case []int64:
+					for _, v := range wherePara.Val.([]int64) {
+						tempSlice = append(tempSlice, v)
+					}
+				case []string:
+					for _, v := range wherePara.Val.([]string) {
+						tempSlice = append(tempSlice, v)
+					}
+				}
+				if tempSlice != nil {
 					tempBuffer.Reset()
 					tempStr = fmt.Sprintf("%s IN(", field)
 					tempBuffer.WriteString(tempStr)
