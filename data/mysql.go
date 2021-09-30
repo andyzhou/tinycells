@@ -7,6 +7,7 @@ import (
 	"github.com/andyzhou/tinycells/db"
 	"github.com/andyzhou/tinycells/tc"
 	"log"
+	"reflect"
 	"runtime/debug"
 	"strconv"
 )
@@ -1012,24 +1013,11 @@ func (d *BaseMysql) formatWhereSql(
 		case WhereKindOfIn:
 			{
 				tempSlice := make([]interface{}, 0)
-				switch wherePara.Val.(type) {
-				case []interface{}:
-					tempSlice, _ = wherePara.Val.([]interface{})
-				case []int32:
-					for _, v := range wherePara.Val.([]int32) {
-						tempSlice = append(tempSlice, v)
-					}
-				case []int:
-					for _, v := range wherePara.Val.([]int) {
-						tempSlice = append(tempSlice, v)
-					}
-				case []int64:
-					for _, v := range wherePara.Val.([]int64) {
-						tempSlice = append(tempSlice, v)
-					}
-				case []string:
-					for _, v := range wherePara.Val.([]string) {
-						tempSlice = append(tempSlice, v)
+				valType := reflect.TypeOf(wherePara.Val)
+				if valType.Kind() == reflect.Slice {
+					refVal := reflect.ValueOf(wherePara.Val)
+					for i := 0; i < refVal.Len(); i++ {
+						tempSlice = append(tempSlice, refVal.Index(i).Interface())
 					}
 				}
 				if tempSlice != nil {
