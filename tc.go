@@ -2,6 +2,7 @@ package tinycells
 
 import (
 	"errors"
+	"github.com/andyzhou/tinycells/cmd"
 	"github.com/andyzhou/tinycells/config"
 	"github.com/andyzhou/tinycells/crypt"
 	"github.com/andyzhou/tinycells/db"
@@ -17,6 +18,7 @@ var (
 
 //interface
 type TinyCells struct {
+	cmd *cmd.Cmd
 	crypt *crypt.Crypt
 	db *db.DB
 	cfg *config.Config
@@ -34,6 +36,7 @@ func GetTC() *TinyCells {
 //construct
 func NewTinyCells() *TinyCells {
 	this := &TinyCells{
+		cmd: cmd.NewCmd(),
 		crypt: crypt.NewCrypt(),
 		util: util.NewUtil(),
 	}
@@ -66,6 +69,11 @@ func (f *TinyCells) SetupConfig(params ...interface{}) error {
 ///////////////////////
 //get sub instance
 ///////////////////////
+
+//get cmd
+func (f *TinyCells) GetCmd() *cmd.Cmd {
+	return f.cmd
+}
 
 //get db
 func (f *TinyCells) GetDB() *db.DB {
