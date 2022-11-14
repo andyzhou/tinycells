@@ -3,6 +3,9 @@ package tinycells
 import (
 	"errors"
 	"github.com/andyzhou/tinycells/config"
+	"github.com/andyzhou/tinycells/crypt"
+	"github.com/andyzhou/tinycells/db"
+	"github.com/andyzhou/tinycells/util"
 	"sync"
 )
 
@@ -14,7 +17,10 @@ var (
 
 //interface
 type TinyCells struct {
+	crypt *crypt.Crypt
+	db *db.DB
 	cfg *config.Config
+	util *util.Util
 }
 
 //get single instance
@@ -27,7 +33,10 @@ func GetTC() *TinyCells {
 
 //construct
 func NewTinyCells() *TinyCells {
-	this := &TinyCells{}
+	this := &TinyCells{
+		crypt: crypt.NewCrypt(),
+		util: util.NewUtil(),
+	}
 	return this
 }
 
@@ -36,8 +45,17 @@ func NewTinyCells() *TinyCells {
 //this should called before use sub instance
 //////////////////////////////////////////////
 
+//setup db
+func (f *TinyCells) SetupDB(params ...interface{}) error {
+	if f.db != nil {
+		return errors.New("db instance had setup")
+	}
+	f.db = db.NewDB()
+	return nil
+}
+
 //setup config
-func (f *TinyCells) SetConfig(params ...interface{}) error {
+func (f *TinyCells) SetupConfig(params ...interface{}) error {
 	if f.cfg != nil {
 		return errors.New("config instance had setup")
 	}
@@ -49,7 +67,22 @@ func (f *TinyCells) SetConfig(params ...interface{}) error {
 //get sub instance
 ///////////////////////
 
+//get db
+func (f *TinyCells) GetDB() *db.DB {
+	return f.db
+}
+
 //get config
 func (f *TinyCells) GetConfig() *config.Config {
 	return f.cfg
+}
+
+//get crypt
+func (f *TinyCells) GetCrypt() *crypt.Crypt {
+	return f.crypt
+}
+
+//get util
+func (f *TinyCells) GetUtil() *util.Util {
+	return f.util
 }
