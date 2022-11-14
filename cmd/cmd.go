@@ -40,10 +40,10 @@ func (f *Cmd) StartApp() error {
 }
 
 //init app, step-2
-func (f *Cmd) InitApp(sf StartFunc, appNames ...string) *cli.App {
+func (f *Cmd) InitApp(sf StartFunc, appNames ...string) error {
 	//check cache
 	if f.app != nil {
-		return f.app
+		return errors.New("app had init")
 	}
 	//init new
 	appName := DefaultAppName
@@ -58,20 +58,20 @@ func (f *Cmd) InitApp(sf StartFunc, appNames ...string) *cli.App {
 		Flags: f.flag.GetFlags(),
 	}
 	f.app = app
-	return app
+	return nil
 }
 
 //register new flag, step-1
-func (f *Cmd) RegisterBoolFlag(name string, usages ...string) error {
-	return f.RegisterNewFlag(name, FlagKindOfBool, usages...)
+func (f *Cmd) RegisterBoolFlag(nameTag string, usages ...string) error {
+	return f.RegisterNewFlag(nameTag, FlagKindOfBool, usages...)
 }
-func (f *Cmd) RegisterInitFlag(name string, usages ...string) error {
-	return f.RegisterNewFlag(name, FlagKindOfInt, usages...)
+func (f *Cmd) RegisterInitFlag(nameTag string, usages ...string) error {
+	return f.RegisterNewFlag(nameTag, FlagKindOfInt, usages...)
 }
-func (f *Cmd) RegisterStringFlag(name string, usages ...string) error {
-	return f.RegisterNewFlag(name, FlagKindOfString, usages...)
+func (f *Cmd) RegisterStringFlag(nameTag string, usages ...string) error {
+	return f.RegisterNewFlag(nameTag, FlagKindOfString, usages...)
 }
-func (f *Cmd) RegisterNewFlag(name string, kind int, usages ...string) error {
-	return f.flag.RegisterNewFlag(name, kind, usages...)
+func (f *Cmd) RegisterNewFlag(nameTag string, kind int, usages ...string) error {
+	return f.flag.RegisterNewFlag(nameTag, kind, usages...)
 }
 

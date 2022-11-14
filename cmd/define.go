@@ -7,4 +7,6 @@ const (
 	FlagKindOfString = iota
 	FlagKindOfInt
 	FlagKindOfBool
+	FlagKindIntSlice
+	FlagKindStringSlice
 )
