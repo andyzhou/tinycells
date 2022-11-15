@@ -16,5 +16,4 @@
 
 .idea
 ./examples/examples
-./examples/*.log
-./*.log
+*.log
