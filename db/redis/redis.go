@@ -52,6 +52,10 @@ func (f *Redis) CreateConn(cfg *Config) (*Connection, error) {
 	if ok && v != nil {
 		v.Disconnect()
 	}
+	//check config
+	if cfg.PoolSize <= 0 {
+		cfg.PoolSize = DefaultPoolSize
+	}
 	//init new
 	connect := NewConnection()
 	connect.config = cfg
@@ -59,13 +63,13 @@ func (f *Redis) CreateConn(cfg *Config) (*Connection, error) {
 		Addr:     cfg.Addr,
 		Password: cfg.Password,
 		DB:       cfg.DBNum,
+		PoolSize: cfg.PoolSize,
 	})
 	//try connect
 	err := connect.Connect()
 	if err != nil {
 		return nil, err
 	}
-
 	//sync into run env
 	f.Lock()
 	defer f.Unlock()
