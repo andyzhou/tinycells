@@ -15,5 +15,5 @@
 # vendor/
 
 .idea
-./examples/examples
+examples
 *.log

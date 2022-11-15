@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -41,8 +42,32 @@ func (u *Util) ConvertStrTime2Unix(timeStr string) (int64, error) {
 }
 
 //convert timestamp to date format
-func (u *Util) ConvertTimeStamp2DateTime(timeStamp int64) string {
+func (u *Util) TimeStamp2DateTime(timeStamp int64) string {
 	return time.Unix(timeStamp, 0).UTC().Format(TimeLayoutStr)
+}
+
+//convert date time string to timestamp
+func (u *Util) DateTime2Unix(dateTime string) (int64, error) {
+	//remove un useful info
+	dateTime = strings.Replace(dateTime, "T", " ", -1)
+	dateTime = strings.Replace(dateTime, "Z", "", -1)
+
+	//theTime, err := time.Parse(TimeLayOut, dateTime)
+	theTime, err := time.ParseInLocation(TimeLayoutStr, dateTime, time.Local)
+	if err != nil {
+		return 0, err
+	}
+	return theTime.Unix(), nil
+}
+
+//convert timestamp to date format, like YYYY-MM-DD
+func (u *Util) TimeStamp2Date(timeStamp int64) string {
+	dateTime := time.Unix(timeStamp, 0).Format(TimeLayoutStr)
+	tempSlice := strings.Split(dateTime, " ")
+	if tempSlice == nil || len(tempSlice) <= 0 {
+		return ""
+	}
+	return tempSlice[0]
 }
 
 //get current date, like YYYY-MM-DD
