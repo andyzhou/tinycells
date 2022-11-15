@@ -21,8 +21,12 @@ type Connection struct {
 
 //construct
 func NewConnection(cfg *Config) *Connection {
+	if cfg.PoolSize <= 0 {
+		cfg.PoolSize = DefaultPoolSize
+	}
 	this := &Connection{
 		config: cfg,
+		optionSlice: []*options.ClientOptions{},
 	}
 	this.interInit()
 	return this
@@ -66,10 +70,10 @@ func (f *Connection) BulkWriteEnd(col string, bwOp *BulkWriteOp) (*BulkWriteResu
 
 //insert many
 func (f *Connection) InsertMany(
-	col string,
-	docs []interface{},
-	opts ...*InsertManyOptions,
-) error {
+				col string,
+				docs []interface{},
+				opts ...*InsertManyOptions,
+			) error {
 	ctx, cancel := f.createContext()
 	defer cancel()
 	_, err := f.db.Collection(col).InsertMany(ctx, docs, opts...)
@@ -160,6 +164,9 @@ func (f *Connection) Find(
 
 //count
 func (f *Connection) Count(col string, filter interface{}) (int64, error) {
+	if filter == nil {
+		filter = D{}
+	}
 	ctx, cancel := f.createContext()
 	defer cancel()
 	count, err := f.db.Collection(col).CountDocuments(ctx, filter)
@@ -291,8 +298,18 @@ func (f *Connection) Connect() error {
 	if err != nil {
 		return err
 	}
+
 	//init db
 	db := client.Database(f.config.DBName)
+
+	//try connect server
+	ctx, cancel := f.createContext()
+	defer cancel()
+	err = client.Connect(ctx)
+	if err != nil {
+		return err
+	}
+
 	//sync inter variables
 	f.db = db
 	f.client = client
@@ -319,6 +336,10 @@ func (f *Connection) interInit() {
 	//init options
 	optionSlice := make([]*options.ClientOptions, 0)
 	optionsMain := options.Client().ApplyURI(f.config.DBUrl)
+	optionsMain.SetMinPoolSize(uint64(DefaultPoolSize))
+	if f.config.PoolSize > 0 {
+		optionsMain.SetMaxPoolSize(uint64(f.config.PoolSize))
+	}
 	optionSlice = append(optionSlice, optionsMain)
 	if f.config.UserName != "" {
 		auth := options.Client().SetAuth(options.Credential{

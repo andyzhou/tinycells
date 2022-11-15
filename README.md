@@ -1,5 +1,10 @@
 # tinyecells
 base component and dev tools
 
+# example
+- cd examples
+- read main.go
+
 ## testing
-- go test -v config_test.go 
+- cd examples
+- go test

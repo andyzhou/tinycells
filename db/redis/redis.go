@@ -60,6 +60,12 @@ func (f *Redis) CreateConn(cfg *Config) (*Connection, error) {
 		Password: cfg.Password,
 		DB:       cfg.DBNum,
 	})
+	//try connect
+	err := connect.Connect()
+	if err != nil {
+		return nil, err
+	}
+
 	//sync into run env
 	f.Lock()
 	defer f.Unlock()

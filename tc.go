@@ -38,6 +38,7 @@ func GetTC() *TinyCells {
 //construct
 func NewTinyCells() *TinyCells {
 	this := &TinyCells{
+		db: db.NewDB(),
 		logger: logger.NewLogger(),
 		cmd: cmd.NewCmd(),
 		crypt: crypt.NewCrypt(),

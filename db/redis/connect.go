@@ -44,6 +44,18 @@ func (f *Connection) Disconnect() error {
 	return f.client.Close()
 }
 
+//connect
+func (f *Connection) Connect() error {
+	if f.client == nil {
+		return errors.New("client hadn't init")
+	}
+	ctx, cancel := f.CreateContext()
+	defer cancel()
+	conn := f.client.Conn(ctx)
+	_, err := conn.Ping(ctx).Result()
+	return err
+}
+
 //run script
 func (f *Connection) RunScript(
 				name string,
