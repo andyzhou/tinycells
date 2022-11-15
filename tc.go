@@ -6,6 +6,7 @@ import (
 	"github.com/andyzhou/tinycells/config"
 	"github.com/andyzhou/tinycells/crypt"
 	"github.com/andyzhou/tinycells/db"
+	"github.com/andyzhou/tinycells/logger"
 	"github.com/andyzhou/tinycells/util"
 	"sync"
 )
@@ -18,9 +19,10 @@ var (
 
 //interface
 type TinyCells struct {
+	db *db.DB
+	logger *logger.Logger
 	cmd *cmd.Cmd
 	crypt *crypt.Crypt
-	db *db.DB
 	cfg *config.Config
 	util *util.Util
 }
@@ -36,6 +38,7 @@ func GetTC() *TinyCells {
 //construct
 func NewTinyCells() *TinyCells {
 	this := &TinyCells{
+		logger: logger.NewLogger(),
 		cmd: cmd.NewCmd(),
 		crypt: crypt.NewCrypt(),
 		util: util.NewUtil(),
@@ -48,12 +51,16 @@ func NewTinyCells() *TinyCells {
 //this should called before use sub instance
 //////////////////////////////////////////////
 
-//setup db
-func (f *TinyCells) SetupDB(params ...interface{}) error {
-	if f.db != nil {
-		return errors.New("db instance had setup")
+//setup logger
+func (f *TinyCells) SetUpLogger(params ...interface{}) error {
+	if params == nil || len(params) < 0 {
+		return errors.New("invalid parameter")
 	}
-	f.db = db.NewDB()
+	config, ok := params[0].(*logger.Config)
+	if !ok || config == nil {
+		return errors.New("invalid logger config")
+	}
+	f.logger.SetConfig(config)
 	return nil
 }
 
@@ -70,14 +77,19 @@ func (f *TinyCells) SetupConfig(params ...interface{}) error {
 //get sub instance
 ///////////////////////
 
-//get cmd
-func (f *TinyCells) GetCmd() *cmd.Cmd {
-	return f.cmd
-}
-
 //get db
 func (f *TinyCells) GetDB() *db.DB {
 	return f.db
+}
+
+//get logger
+func (f *TinyCells) GetLogger() *logger.Logger {
+	return f.logger
+}
+
+//get cmd
+func (f *TinyCells) GetCmd() *cmd.Cmd {
+	return f.cmd
 }
 
 //get config
