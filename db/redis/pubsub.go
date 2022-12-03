@@ -29,10 +29,29 @@ func (f *PubSub) Close() {
 	if f.chanMap == nil || len(f.chanMap) <= 0 {
 		return
 	}
+	f.Lock()
+	defer f.Unlock()
 	for _, v := range f.chanMap {
 		close(v)
 	}
 	f.chanMap = map[string]chan struct{}{}
+}
+
+//close channel
+func (f *PubSub) CloseChannel(channelName string) error {
+	if channelName == "" {
+		return errors.New("invalid parameter")
+	}
+	f.Lock()
+	defer f.Unlock()
+	v, ok := f.chanMap[channelName]
+	if !ok || v == nil {
+		return errors.New("no such channel")
+	}
+	//close chan
+	close(v)
+	delete(f.chanMap, channelName)
+	return nil
 }
 
 //publish message
@@ -77,6 +96,7 @@ func (f *PubSub) Subscript(channelName string, cb PubSubCallback) error {
 			}
 			f.Lock()
 			defer f.Unlock()
+			close(closeChan)
 			delete(f.chanMap, channelName)
 		}()
 
