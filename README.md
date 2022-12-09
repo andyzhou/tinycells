@@ -1,5 +1,5 @@
 # tinyecells
-base component and dev tools
+base go component and dev tools
 
 # example
 - cd examples
