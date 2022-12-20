@@ -4,11 +4,47 @@ import (
 	"github.com/andyzhou/tinycells"
 	"github.com/urfave/cli"
 	"log"
+	"time"
 )
 
 func main() {
-	redisExample()
+	mysqlExample()
 }
+
+//mysql
+func mysqlExample() {
+	//get sub instance
+	tc := tinycells.GetTC()
+	mysql := tc.GetDB().GetMysql()
+
+	//db tag
+	dbTag := "sys"
+
+	//gen config
+	config := mysql.GenNewConfig()
+	config.Host = "127.0.0.1"
+	config.Port = 3306
+	config.User = "root"
+	config.Password = "123456"
+	config.DBName = "sys"
+
+	//create connect
+	conn, err := mysql.CreateConnect(dbTag, config)
+	if err != nil {
+		log.Printf("connect mysql failed, err:%v\n", err)
+		return
+	}
+	for {
+		err = conn.Ping()
+		log.Printf("connect mysql succeed, ping result %v\n", err)
+		if err == nil {
+			record, err := conn.GetRow("SELECT * FROM sys_config")
+			log.Printf("record:%v, err:%v\n", record, err)
+		}
+		time.Sleep(time.Second)
+	}
+}
+
 
 //redis
 func redisExample() {
@@ -28,7 +64,7 @@ func redisExample() {
 	//create connect
 	_, err := rd.CreateConn(config)
 	if err != nil {
-		log.Printf("connect redis failed, err:%v", err)
+		log.Printf("connect redis failed, err:%v\n", err)
 		return
 	}
 	defer rd.C(dbName).Disconnect()
@@ -36,7 +72,7 @@ func redisExample() {
 	//get keys
 	rc, ctx, _ := rd.C(dbName).GetClient()
 	keys, err := rc.Keys(ctx, "*").Result()
-	log.Printf("keys:%v, err:%v", keys, err)
+	log.Printf("keys:%v, err:%v\n", keys, err)
 }
 
 //mongo
