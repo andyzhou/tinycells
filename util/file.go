@@ -7,22 +7,22 @@ import (
 )
 
 //check file stat and last modify time
-func (u *Util) GetFileModifyTime(filePath string) int64 {
+func (u *Util) GetFileModifyTime(filePath string) (int64, error) {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		return 0
+		return 0, err
 	}
 	modifyTime := fileInfo.ModTime().Unix()
-	return modifyTime
+	return modifyTime, nil
 }
 
 //get file info
-func (u *Util) GetFileInfo(filePath string) os.FileInfo {
+func (u *Util) GetFileInfo(filePath string) (os.FileInfo, error) {
 	fileInfo, err := os.Stat(filePath)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return fileInfo
+	return fileInfo, nil
 }
 
 //read byte file

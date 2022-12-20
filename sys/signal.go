@@ -12,7 +12,7 @@ import (
 )
 
 /*
- * system signal catch face, implement of `ISignal`
+ * system signal catch face
  *
  * - watch system signal
  * - notify relate refer chan when shutdown

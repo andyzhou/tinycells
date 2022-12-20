@@ -3,12 +3,6 @@ package logger
 import "go.uber.org/zap"
 
 type (
-	//Logger = zap.Logger
-	//Field = zap.Field
-	//Sugar = zap.SugaredLogger
-)
-
-type (
 	Config struct {
 		Env string
 		LogLevel string

@@ -9,12 +9,26 @@ import (
 	"sync"
 )
 
+//global variable
+var (
+	_logger *Logger
+	_loggerOnce sync.Once
+)
+
 //face info
 type Logger struct {
 	conf *Config
 	logger *zap.Logger
 	sysLogger map[string]*zap.Logger
 	sync.RWMutex
+}
+
+//get single instance
+func GetLogger() *Logger {
+	_loggerOnce.Do(func() {
+		_logger = NewLogger()
+	})
+	return _logger
 }
 
 //construct
