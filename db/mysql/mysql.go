@@ -8,6 +8,7 @@ import (
 //face info
 type Mysql struct {
 	connectMap map[string]*Connect //dbTag -> *Connect
+	JsonData
 	sync.RWMutex
 }
 
