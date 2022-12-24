@@ -126,6 +126,19 @@ func (f *Connection) UpdateMany(
 	return err
 }
 
+//update one
+func (f *Connection) UpdateOne(
+				col string,
+				filter interface{},
+				update interface{},
+				opts ...*UpdateOptions,
+			) error {
+	ctx, cancel := f.createContext()
+	defer cancel()
+	_, err := f.db.Collection(col).UpdateOne(ctx, filter, update, opts...)
+	return err
+}
+
 //find and update one
 func (f *Connection) FindOneAndUpdate(
 				col string,
