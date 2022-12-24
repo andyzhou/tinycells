@@ -36,6 +36,15 @@ func (f *Connection) SetTimeOut(timeoutSeconds int64) bool {
 	return true
 }
 
+//set config
+func (f *Connection) SetConfig(cfg *Config) error {
+	if cfg == nil {
+		return errors.New("invalid config")
+	}
+	f.config = cfg
+	return nil
+}
+
 //disconnect
 func (f *Connection) Disconnect() error {
 	if f.client == nil {
@@ -51,7 +60,7 @@ func (f *Connection) Connect() error {
 	}
 	ctx, cancel := f.CreateContext()
 	defer cancel()
-	conn := f.client.Conn(ctx)
+	conn := f.client.Conn()
 	_, err := conn.Ping(ctx).Result()
 	return err
 }
