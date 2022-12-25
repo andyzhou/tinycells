@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"sync"
 	"time"
 )
@@ -60,7 +60,7 @@ func (f *Connection) Connect() error {
 	}
 	ctx, cancel := f.CreateContext()
 	defer cancel()
-	conn := f.client.Conn()
+	conn := f.client.Conn(ctx)
 	_, err := conn.Ping(ctx).Result()
 	return err
 }
