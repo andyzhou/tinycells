@@ -10,5 +10,5 @@ require (
 	github.com/urfave/cli v1.22.10
 	github.com/urfave/cli/v2 v2.23.7
 	go.mongodb.org/mongo-driver v1.11.1
-	go.uber.org/zap v1.24.0
+	go.uber.org/zap v1.19.1
 )
