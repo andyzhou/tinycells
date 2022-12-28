@@ -18,13 +18,15 @@ func main() {
 func kafkaExample() {
 	var (
 		wg sync.WaitGroup
+		recvTimes int
+		sendMaxTimes int
 	)
 
 	//topic and key setup
 	topic := "topic-1"
 	key := "key-1"
 	message := "this is test message %v"
-	sendMaxTimes := 5
+	sendMaxTimes = 5
 
 	//get sub instance
 	tc := tinycells.GetTC()
@@ -45,24 +47,20 @@ func kafkaExample() {
 	wg.Add(1)
 	log.Printf("start kafka succeed\n")
 	log.Printf("topic:%v, key:%v, message:%v\n", topic, key, message)
-
 	log.Printf("kafka consumer register begin...\n")
+
 	//receive message inf son process
-	recvTimes := 0
 	receiver := func(key, message []byte) bool {
 		log.Printf("received topic:%v, key:%v, message:%v \n\n", topic, string(key), string(message))
 		recvTimes++
-		if recvTimes >= sendMaxTimes {
-			wg.Done()
-		}
 		return true
 	}
+
 	//register consumer
 	consumer := kafka.GetConsumer()
 	err = consumer.RegisterConsumer(topic, receiver)
 	if err != nil {
 		log.Printf("kafka consumer register failed, err:%v\n", err.Error())
-		wg.Done()
 		return
 	}
 	log.Printf("kafka consumer register success.\n")
@@ -72,18 +70,20 @@ func kafkaExample() {
 		//send message
 		i := 0
 		for {
-			producer := kafka.GetProducer()
-			msg := fmt.Sprintf(message, i)
-			err = producer.SendMessage(topic, key, msg)
-			if err != nil {
-				log.Printf("kafka producer send message failed, err:%v\n", err.Error())
-				wg.Done()
-				return
+			if i < sendMaxTimes {
+				producer := kafka.GetProducer()
+				msg := fmt.Sprintf(message, i)
+				err = producer.SendMessage(topic, key, msg)
+				if err != nil {
+					log.Printf("kafka producer send message failed, err:%v\n", err.Error())
+					break
+				}
+				log.Printf("kafka producer send message succeed\n")
+				time.Sleep(time.Second)
+				i++
 			}
-			log.Printf("kafka producer send message succeed\n")
-			i++
-			//time.Sleep(time.Second * 3)
-			if i > sendMaxTimes {
+			if recvTimes >= sendMaxTimes {
+				wg.Done()
 				break
 			}
 		}

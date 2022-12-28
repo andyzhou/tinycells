@@ -160,7 +160,6 @@ func (f *Producer) sendMessage(req *ProduceReq) error {
 		return fmt.Errorf("init topic %v, %v failed", req.Topic, req.Key)
 	}
 	//init and send message
-	log.Printf("kafka.Producer:sendMessage, topic:%v, key:%v, val:%v\n", req.Topic, req.Key, req.Val)
 	topic.Value = sarama.StringEncoder(req.Val)
 	(*f.producer).SendMessage(topic)
 	return nil
