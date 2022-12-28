@@ -68,8 +68,8 @@ func (f *Consumer) RegisterConsumer(topic string, cb func([]byte, []byte) bool) 
 
 	//check and init with locker
 	f.Lock()
-	defer f.Unlock()
 	_, ok := f.consumerMap[topic]
+	f.Unlock()
 	if ok {
 		//had registered
 		return nil
@@ -124,14 +124,18 @@ func (f *Consumer) runConsumerProcess(dc *DynamicConsumer, pc *sarama.PartitionC
 			log.Println("kafka.Consumer:runConsumerProcess trace:", string(debug.Stack()))
 		}
 		(*pc).Close()
+		log.Println("kafka.Consumer:runConsumerProcess end..")
 	}()
 
 	//loop wait message
+	log.Println("kafka.Consumer:runConsumerProcess loop..")
 	for {
 		select {
 		case message, isOk = <- (*pc).Messages():
 			if isOk {
 				//dynamic run cb func
+				log.Printf("kafka.Consumer:runConsumerProcess, topic:%v, keys:%v, message:%v\n",
+							dc.Topic, string(message.Key), string(message.Value))
 				if dc.CB != nil {
 					dc.CB(message.Key, message.Value)
 				}
@@ -157,17 +161,20 @@ func (f *Consumer) initDynamicConsumer(dc *DynamicConsumer) error {
 
 	//init partition consumer
 	pConsumer, err := (*f.rootConsumer).ConsumePartition(dc.Topic, 0, sarama.OffsetNewest)
+	log.Printf("kafka.Consumer:initDynamicConsumer, topic:%v, err:%v", dc.Topic, err)
 	if err != nil {
 		return err
 	}
 
 	//spawn son process
 	go f.runConsumerProcess(dc, &pConsumer)
+	log.Printf("kafka.Consumer:initDynamicConsumer, topic:%v, sync", dc.Topic)
 
 	//sync into dynamic map
 	f.Lock()
 	defer f.Unlock()
 	f.consumerMap[dc.Topic] = dc
+	log.Printf("kafka.Consumer:initDynamicConsumer, topic:%v, done", dc.Topic)
 	return nil
 }
 

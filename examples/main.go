@@ -1,14 +1,97 @@
 package main
 
 import (
+	"fmt"
+	"log"
+	"sync"
+	"time"
+
 	"github.com/andyzhou/tinycells"
 	"github.com/urfave/cli/v2"
-	"log"
-	"time"
 )
 
 func main() {
-	mysqlExample()
+	kafkaExample()
+}
+
+//kafka
+func kafkaExample() {
+	var (
+		wg sync.WaitGroup
+	)
+
+	//topic and key setup
+	topic := "topic-1"
+	key := "key-1"
+	message := "this is test message %v"
+	sendMaxTimes := 5
+
+	//get sub instance
+	tc := tinycells.GetTC()
+	kafka := tc.GetMQ().GetKafka()
+
+	//setup
+	address := []string{
+		"127.0.0.1:9092",
+	}
+	kafka.SetAddress(address)
+
+	//start
+	err := kafka.Start()
+	if err != nil {
+		log.Printf("start kafka failed, err:%v\n", err.Error())
+		return
+	}
+	wg.Add(1)
+	log.Printf("start kafka succeed\n")
+	log.Printf("topic:%v, key:%v, message:%v\n", topic, key, message)
+
+	log.Printf("kafka consumer register begin...\n")
+	//receive message inf son process
+	recvTimes := 0
+	receiver := func(key, message []byte) bool {
+		log.Printf("received topic:%v, key:%v, message:%v \n\n", topic, string(key), string(message))
+		recvTimes++
+		if recvTimes >= sendMaxTimes {
+			wg.Done()
+		}
+		return true
+	}
+	//register consumer
+	consumer := kafka.GetConsumer()
+	err = consumer.RegisterConsumer(topic, receiver)
+	if err != nil {
+		log.Printf("kafka consumer register failed, err:%v\n", err.Error())
+		wg.Done()
+		return
+	}
+	log.Printf("kafka consumer register success.\n")
+
+	//loop sync sender
+	sf := func(wg *sync.WaitGroup) {
+		//send message
+		i := 0
+		for {
+			producer := kafka.GetProducer()
+			msg := fmt.Sprintf(message, i)
+			err = producer.SendMessage(topic, key, msg)
+			if err != nil {
+				log.Printf("kafka producer send message failed, err:%v\n", err.Error())
+				wg.Done()
+				return
+			}
+			log.Printf("kafka producer send message succeed\n")
+			i++
+			//time.Sleep(time.Second * 3)
+			if i > sendMaxTimes {
+				break
+			}
+		}
+	}
+	go sf(&wg)
+	log.Printf("kafka example running...\n")
+	wg.Wait()
+	log.Printf("kafka example done!\n")
 }
 
 //mysql
@@ -44,7 +127,6 @@ func mysqlExample() {
 		time.Sleep(time.Second)
 	}
 }
-
 
 //redis
 func redisExample() {
@@ -135,7 +217,7 @@ func cmdExample() {
 }
 
 //logger
-func loggerExample()  {
+func loggerExample() {
 	tc := tinycells.GetTC()
 	logger := tc.GetLogger()
 	config := logger.BuildDefaultConfig()

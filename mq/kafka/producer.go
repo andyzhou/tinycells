@@ -18,7 +18,7 @@ import (
 type Producer struct {
 	serverAddr []string
 	conf *sarama.Config
-	producer *sarama.AsyncProducer
+	producer *sarama.SyncProducer
 	topicMap map[string]*sarama.ProducerMessage
 	produceChan chan ProduceReq
 	closeChan chan bool
@@ -77,7 +77,7 @@ func (f *Producer) Start() error {
 	}
 
 	//init new producer
-	producer, err := sarama.NewAsyncProducer(f.serverAddr, f.conf)
+	producer, err := sarama.NewSyncProducer(f.serverAddr, f.conf)
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (f *Producer) runMainProcess() {
 			log.Println("kafka.Producer trace:", string(debug.Stack()))
 		}
 		//close relate obj
-		(*f.producer).AsyncClose()
+		(*f.producer).Close()
 		close(f.closeChan)
 		//decr counter
 		f.counter.Store(0)
@@ -160,8 +160,9 @@ func (f *Producer) sendMessage(req *ProduceReq) error {
 		return fmt.Errorf("init topic %v, %v failed", req.Topic, req.Key)
 	}
 	//init and send message
+	log.Printf("kafka.Producer:sendMessage, topic:%v, key:%v, val:%v\n", req.Topic, req.Key, req.Val)
 	topic.Value = sarama.StringEncoder(req.Val)
-	(*f.producer).Input() <- topic
+	(*f.producer).SendMessage(topic)
 	return nil
 }
 
