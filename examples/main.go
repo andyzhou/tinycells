@@ -12,7 +12,7 @@ func main() {
 	loggerExample()
 	mongoExample()
 	redisExample()
-	//mysqlExample()
+	mysqlExample()
 }
 
 //kafka
