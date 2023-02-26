@@ -1,12 +1,12 @@
 package config
 
 import (
-"bufio"
-"fmt"
-"io"
-"os"
-"regexp"
-"strings"
+	"bufio"
+	"fmt"
+	"io"
+	"os"
+	"regexp"
+	"strings"
 )
 
 /*

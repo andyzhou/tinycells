@@ -11,7 +11,9 @@ import (
 )
 
 func main() {
-	kafkaExample()
+	cmdExample()
+	loggerExample()
+	mongoExample()
 }
 
 //kafka
