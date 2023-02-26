@@ -1,100 +1,99 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"sync"
-	"time"
-
 	"github.com/andyzhou/tinycells"
 	"github.com/urfave/cli/v2"
+	"log"
+	"time"
 )
 
 func main() {
 	cmdExample()
 	loggerExample()
 	mongoExample()
+	redisExample()
+	//mysqlExample()
 }
 
 //kafka
-func kafkaExample() {
-	var (
-		wg sync.WaitGroup
-		recvTimes int
-		sendMaxTimes int
-	)
-
-	//topic and key setup
-	topic := "topic-1"
-	key := "key-1"
-	message := "this is test message %v"
-	sendMaxTimes = 5
-
-	//get sub instance
-	tc := tinycells.GetTC()
-	kafka := tc.GetMQ().GetKafka()
-
-	//setup
-	address := []string{
-		"127.0.0.1:9092",
-	}
-	kafka.SetAddress(address)
-
-	//start
-	err := kafka.Start()
-	if err != nil {
-		log.Printf("start kafka failed, err:%v\n", err.Error())
-		return
-	}
-	wg.Add(1)
-	log.Printf("start kafka succeed\n")
-	log.Printf("topic:%v, key:%v, message:%v\n", topic, key, message)
-	log.Printf("kafka consumer register begin...\n")
-
-	//receive message inf son process
-	receiver := func(key, message []byte) bool {
-		log.Printf("received topic:%v, key:%v, message:%v \n\n", topic, string(key), string(message))
-		recvTimes++
-		return true
-	}
-
-	//register consumer
-	consumer := kafka.GetConsumer()
-	err = consumer.RegisterConsumer(topic, receiver)
-	if err != nil {
-		log.Printf("kafka consumer register failed, err:%v\n", err.Error())
-		return
-	}
-	log.Printf("kafka consumer register success.\n")
-
-	//loop sync sender
-	sf := func(wg *sync.WaitGroup) {
-		//send message
-		i := 0
-		for {
-			if i < sendMaxTimes {
-				producer := kafka.GetProducer()
-				msg := fmt.Sprintf(message, i)
-				err = producer.SendMessage(topic, key, msg)
-				if err != nil {
-					log.Printf("kafka producer send message failed, err:%v\n", err.Error())
-					break
-				}
-				log.Printf("kafka producer send message succeed\n")
-				time.Sleep(time.Second)
-				i++
-			}
-			if recvTimes >= sendMaxTimes {
-				wg.Done()
-				break
-			}
-		}
-	}
-	go sf(&wg)
-	log.Printf("kafka example running...\n")
-	wg.Wait()
-	log.Printf("kafka example done!\n")
-}
+//func kafkaExample() {
+//	var (
+//		wg sync.WaitGroup
+//		recvTimes int
+//		sendMaxTimes int
+//	)
+//
+//	//topic and key setup
+//	topic := "topic-1"
+//	key := "key-1"
+//	message := "this is test message %v"
+//	sendMaxTimes = 5
+//
+//	//get sub instance
+//	tc := tinycells.GetTC()
+//	kafka := tc.GetMQ().GetKafka()
+//
+//	//setup
+//	address := []string{
+//		"127.0.0.1:9092",
+//	}
+//	kafka.SetAddress(address)
+//
+//	//start
+//	err := kafka.Start()
+//	if err != nil {
+//		log.Printf("start kafka failed, err:%v\n", err.Error())
+//		return
+//	}
+//	wg.Add(1)
+//	log.Printf("start kafka succeed\n")
+//	log.Printf("topic:%v, key:%v, message:%v\n", topic, key, message)
+//	log.Printf("kafka consumer register begin...\n")
+//
+//	//receive message inf son process
+//	receiver := func(key, message []byte) bool {
+//		log.Printf("received topic:%v, key:%v, message:%v \n\n", topic, string(key), string(message))
+//		recvTimes++
+//		return true
+//	}
+//
+//	//register consumer
+//	consumer := kafka.GetConsumer()
+//	err = consumer.RegisterConsumer(topic, receiver)
+//	if err != nil {
+//		log.Printf("kafka consumer register failed, err:%v\n", err.Error())
+//		return
+//	}
+//	log.Printf("kafka consumer register success.\n")
+//
+//	//loop sync sender
+//	sf := func(wg *sync.WaitGroup) {
+//		//send message
+//		i := 0
+//		for {
+//			if i < sendMaxTimes {
+//				producer := kafka.GetProducer()
+//				msg := fmt.Sprintf(message, i)
+//				err = producer.SendMessage(topic, key, msg)
+//				if err != nil {
+//					log.Printf("kafka producer send message failed, err:%v\n", err.Error())
+//					break
+//				}
+//				log.Printf("kafka producer send message succeed\n")
+//				time.Sleep(time.Second)
+//				i++
+//			}
+//			if recvTimes >= sendMaxTimes {
+//				wg.Done()
+//				break
+//			}
+//		}
+//	}
+//	go sf(&wg)
+//	log.Printf("kafka example running...\n")
+//	wg.Wait()
+//	log.Printf("kafka example done!\n")
+//}
 
 //mysql
 func mysqlExample() {
@@ -141,7 +140,7 @@ func redisExample() {
 
 	//gen config
 	config := rd.GenNewConfig()
-	config.Addr = "127.0.0.1:6380"
+	config.Addr = "127.0.0.1:6379"
 	config.DBTag = dbName
 	config.DBNum = 0
 
@@ -153,9 +152,19 @@ func redisExample() {
 	}
 	defer rd.C(dbName).Disconnect()
 
+	//get client connect
+	rc := rd.C(dbName).GetConnect()
+
+	//ping
+	result, err := rc.Ping().Result()
+	if err != nil {
+		log.Printf("ping redis failed, err:%v\n", err)
+		return
+	}
+	log.Printf("pind redis result:%v\n", result)
+
 	//get keys
-	rc, ctx, _ := rd.C(dbName).GetClient()
-	keys, err := rc.Keys(ctx, "*").Result()
+	keys, err := rc.Keys("*").Result()
 	log.Printf("keys:%v, err:%v\n", keys, err)
 }
 

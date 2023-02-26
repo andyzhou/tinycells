@@ -64,9 +64,9 @@ func (f *PubSub) Publish(channelName string, message interface{}) error {
 		return errors.New("inter conn not init")
 	}
 	//key opt
-	c, ctx, cancel := f.conn.GetClient()
-	defer cancel()
-	_, err := c.Publish(ctx, channelName, message).Result()
+	c := f.conn.GetConnect()
+	//defer cancel()
+	_, err := c.Publish(channelName, message).Result()
 	return err
 }
 
@@ -101,9 +101,9 @@ func (f *PubSub) Subscript(channelName string, cb PubSubCallback) error {
 		}()
 
 		//key opt
-		c, ctx, cancel := f.conn.GetClient()
-		defer cancel()
-		ps := c.Subscribe(ctx, channelName)
+		c := f.conn.GetClient()
+		//defer cancel()
+		ps := c.Subscribe(channelName)
 		dataChan := ps.Channel()
 
 		//loop

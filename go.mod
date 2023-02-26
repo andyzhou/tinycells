@@ -3,9 +3,8 @@ module github.com/andyzhou/tinycells
 go 1.14
 
 require (
-	github.com/Shopify/sarama v1.37.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v7 v7.4.1
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/urfave/cli/v2 v2.23.7

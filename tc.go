@@ -7,7 +7,7 @@ import (
 	"github.com/andyzhou/tinycells/crypt"
 	"github.com/andyzhou/tinycells/db"
 	"github.com/andyzhou/tinycells/logger"
-	"github.com/andyzhou/tinycells/mq"
+	//"github.com/andyzhou/tinycells/mq"
 	"github.com/andyzhou/tinycells/util"
 	"sync"
 )
@@ -20,7 +20,7 @@ var (
 
 //interface
 type TinyCells struct {
-	mq *mq.MQ
+	//mq *mq.MQ
 	db *db.DB
 	logger *logger.Logger
 	cmd *cmd.Cmd
@@ -40,7 +40,7 @@ func GetTC() *TinyCells {
 //construct
 func NewTinyCells() *TinyCells {
 	this := &TinyCells{
-		mq: mq.NewMQ(),
+		//mq: mq.NewMQ(),
 		db: db.NewDB(),
 		logger: logger.NewLogger(),
 		cmd: cmd.NewCmd(),
@@ -81,10 +81,10 @@ func (f *TinyCells) SetupConfig(params ...interface{}) error {
 //get sub instance
 ///////////////////////
 
-//get mq
-func (f *TinyCells) GetMQ() *mq.MQ {
-	return f.mq
-}
+////get mq
+//func (f *TinyCells) GetMQ() *mq.MQ {
+//	return f.mq
+//}
 
 //get db
 func (f *TinyCells) GetDB() *db.DB {

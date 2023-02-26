@@ -2,13 +2,13 @@ package redis
 
 import (
 	"errors"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v7"
 	"sync"
 )
 
 //face info
 type Redis struct {
-	connMap map[string]*Connection //dbTag -> *Connection
+	connMap sync.Map //dbTag -> *Connection
 	pubSub *PubSub
 	sync.RWMutex
 }
@@ -16,7 +16,7 @@ type Redis struct {
 //construct
 func NewRedis() *Redis {
 	this := &Redis{
-		connMap: map[string]*Connection{},
+		connMap: sync.Map{},
 		pubSub: NewPubSub(),
 	}
 	return this
@@ -32,11 +32,9 @@ func (f *Redis) C(dbName string) *Connection {
 	if dbName == "" {
 		return nil
 	}
-	f.Lock()
-	defer f.Unlock()
-	v, ok := f.connMap[dbName]
+	v, ok := f.connMap.Load(dbName)
 	if ok && v != nil {
-		return v
+		return v.(*Connection)
 	}
 	return nil
 }
@@ -48,15 +46,15 @@ func (f *Redis) CreateConn(cfg *Config) (*Connection, error) {
 		return nil, errors.New("invalid redis db config")
 	}
 	//check and release old
-	v, ok := f.connMap[cfg.DBTag]
+	v, ok := f.connMap.Load(cfg.DBTag)
 	if ok && v != nil {
-		v.Disconnect()
+		v.(*Connection).Disconnect()
 	}
 	//check config
 	if cfg.PoolSize <= 0 {
 		cfg.PoolSize = DefaultPoolSize
 	}
-	//init new
+	//init new connect
 	connect := NewConnection()
 	connect.config = cfg
 	connect.client = redis.NewClient(&redis.Options{
@@ -71,9 +69,10 @@ func (f *Redis) CreateConn(cfg *Config) (*Connection, error) {
 		return nil, err
 	}
 	//sync into run env
-	f.Lock()
-	defer f.Unlock()
-	f.connMap[cfg.DBTag] = connect
+	f.connMap.Store(cfg.DBTag, connect)
+	//f.Lock()
+	//defer f.Unlock()
+	//f.connMap[cfg.DBTag] = connect
 	return connect, nil
 }
 

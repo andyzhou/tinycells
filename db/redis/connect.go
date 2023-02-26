@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v7"
 	"sync"
 	"time"
 )
@@ -12,6 +12,7 @@ import (
 //face info
 type Connection struct {
 	client  *redis.Client
+	conn *redis.Conn
 	config  *Config
 	scripts map[string]*redis.Script
 	timeout time.Duration
@@ -47,10 +48,16 @@ func (f *Connection) SetConfig(cfg *Config) error {
 
 //disconnect
 func (f *Connection) Disconnect() error {
-	if f.client == nil {
-		return nil
+	var (
+		err error
+	)
+	if f.client != nil {
+		err = f.client.Close()
 	}
-	return f.client.Close()
+	if f.conn != nil {
+		err = f.conn.Close()
+	}
+	return err
 }
 
 //connect
@@ -58,11 +65,18 @@ func (f *Connection) Connect() error {
 	if f.client == nil {
 		return errors.New("client hadn't init")
 	}
-	ctx, cancel := f.CreateContext()
-	defer cancel()
-	conn := f.client.Conn(ctx)
-	_, err := conn.Ping(ctx).Result()
+	//ctx, cancel := f.CreateContext()
+	//defer cancel()
+	conn := f.client.Conn()
+	_, err := conn.Ping().Result()
+	if err == nil {
+		f.conn = conn
+	}
 	return err
+}
+
+func (f *Connection) GetConnect() *redis.Conn {
+	return f.conn
 }
 
 //run script
@@ -75,9 +89,9 @@ func (f *Connection) RunScript(
 	if !ok || script == nil {
 		return nil, fmt.Errorf("scripter is not exist:%s", name)
 	}
-	ctx, cancel := f.CreateContext()
-	defer cancel()
-	return script.Run(ctx, f.client, keys, args).Result()
+	//ctx, cancel := f.CreateContext()
+	//defer cancel()
+	return script.Run(f.client, keys, args).Result()
 }
 
 //add script
@@ -90,16 +104,19 @@ func (f *Connection) AddScript(name, script string) error {
 		return fmt.Errorf("ScriptAdd script is exist:%s", name)
 	}
 	f.scripts[name] = redis.NewScript(script)
-	ctx, cancel := context.WithTimeout(context.Background(), f.timeout*time.Second)
-	defer cancel()
-	f.scripts[name].Load(ctx, f.client)
+	//ctx, cancel := context.WithTimeout(context.Background(), f.timeout*time.Second)
+	//defer cancel()
+	f.scripts[name].Load(f.client)
 	return nil
 }
 
 //get client
-func (f *Connection) GetClient() (*redis.Client, context.Context, context.CancelFunc) {
-	ctx, cancel := f.CreateContext()
-	return f.client, ctx, cancel
+//func (f *Connection) GetClient() (*redis.Client, context.Context, context.CancelFunc) {
+//	ctx, cancel := f.CreateContext()
+//	return f.client, ctx, cancel
+//}
+func (f *Connection) GetClient() *redis.Client {
+	return f.client
 }
 
 //create context
