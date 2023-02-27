@@ -1,3 +1,10 @@
-**Introduce**
+# tinyecells
+base go component and dev tools
 
-This is go code collections for developer.
+# example
+- cd examples
+- read main.go
+
+## testing
+- cd examples
+- go test
