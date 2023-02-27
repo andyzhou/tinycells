@@ -11,4 +11,5 @@ require (
 	go.mongodb.org/mongo-driver v1.11.1
 	go.uber.org/zap v1.19.1
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d
+	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 )
