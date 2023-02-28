@@ -3,6 +3,7 @@ package web
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"html/template"
 	"os"
 	"sync"
 )
@@ -92,6 +93,14 @@ func (f *App) RegisterSubApp(
 //get gin engine
 func (f *App) GetGin() *gin.Engine {
 	return f.server
+}
+
+//set map func
+func (f *App) SetMapFunc(mf template.FuncMap) {
+	if mf == nil {
+		return
+	}
+	f.server.SetFuncMap(mf)
 }
 
 //set static file path
