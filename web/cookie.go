@@ -45,7 +45,7 @@ func NewCookie() *Cookie {
 	//self init
 	this := &Cookie{
 		expireTime:CookieExpireSeconds,
-		jwt: crypt.NewJwt(),
+		//jwt: crypt.NewJwt(),
 	}
 
 	//inter init
@@ -80,43 +80,44 @@ func (f *Cookie) DelCookie(name,
 func (f *Cookie) GetCookie(
 			key string,
 			c *gin.Context,
-		) (map[string]interface{}, error) {
+		) (string, error) {
 	//check
 	if key == "" || c == nil {
-		return nil, errors.New("invalid parameter")
+		return "", errors.New("invalid parameter")
 	}
 	//get original value
 	orgVal, err := c.Cookie(key)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	//try decode pass jwt
-	jwt, err := f.jwt.Decode(orgVal)
-	if err != nil {
-		return nil, err
-	}
-	return jwt, nil
+	//jwt, err := f.jwt.Decode(orgVal)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//return jwt, nil
+	return orgVal, nil
 }
 
 //set cookie
 func (f *Cookie) SetCookie(
 			key string,
-			val map[string]interface{},
+			val string,
 			expireSeconds int,
 			domain string,
 			c *gin.Context,
 		) error {
 	//check
-	if key == "" || val == nil || c == nil {
+	if key == "" || val == "" || c == nil {
 		return errors.New("invalid parameter")
 	}
-	//try encode pass jwt
-	encStr, err := f.jwt.Encode(val)
-	if err != nil {
-		return err
-	}
+	////try encode pass jwt
+	//encStr, err := f.jwt.Encode(val)
+	//if err != nil {
+	//	return err
+	//}
 	//set into cookie
-	c.SetCookie(key, encStr, expireSeconds, "/", domain, false, true)
+	c.SetCookie(key, val, expireSeconds, "/", domain, false, true)
 	return nil
 }
 
