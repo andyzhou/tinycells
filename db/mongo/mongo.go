@@ -39,15 +39,13 @@ func (f *Mongo) CreateConn(cfg *Config) (*Connection, error) {
 	if cfg == nil {
 		return nil, errors.New("invalid redis db config")
 	}
-	////check and release old
-	//v, ok := f.connMap[cfg.DBName]
-	//if ok && v != nil {
-	//	v.Disconnect()
-	//}
-
 	//init new
 	connect := NewConnection(cfg)
 	err := connect.Connect()
+	if err != nil {
+		return nil, err
+	}
+	err = connect.Ping()
 	if err != nil {
 		return nil, err
 	}

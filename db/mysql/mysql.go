@@ -39,6 +39,11 @@ func (f *Mysql) CreateConnect(tag string, conf *Config) (*Connect, error) {
 	}
 	//init new connect
 	conn := NewConnect(conf)
+	err := conn.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	f.Lock()
 	defer f.Unlock()
 	f.connectMap[tag] = conn

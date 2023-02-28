@@ -2,17 +2,36 @@ package main
 
 import (
 	"github.com/andyzhou/tinycells"
+	"github.com/andyzhou/tinycells/web"
 	"github.com/urfave/cli/v2"
 	"log"
+	"sync"
 	"time"
 )
 
 func main() {
+	var (
+		wg sync.WaitGroup
+	)
+
 	cmdExample()
 	loggerExample()
 	mongoExample()
 	redisExample()
 	mysqlExample()
+	webAppExample()
+
+	//wait
+	wg.Add(1)
+	wg.Wait()
+}
+
+//web app
+func webAppExample()  {
+	app := web.NewApp()
+	app.SetTplPath("./tpl")
+	app.RegisterSubApp("/", NewSubApp())
+	go app.Start(8090)
 }
 
 //kafka
@@ -118,15 +137,18 @@ func mysqlExample() {
 		log.Printf("connect mysql failed, err:%v\n", err)
 		return
 	}
-	for {
-		err = conn.Ping()
-		log.Printf("connect mysql succeed, ping result %v\n", err)
-		if err == nil {
-			record, err := conn.GetRow("SELECT * FROM sys_config")
-			log.Printf("record:%v, err:%v\n", record, err)
+	sf := func() {
+		for {
+			err = conn.Ping()
+			log.Printf("connect mysql succeed, ping result %v\n", err)
+			if err == nil {
+				record, err := conn.GetRow("SELECT * FROM sys_config")
+				log.Printf("record:%v, err:%v\n", record, err)
+			}
+			time.Sleep(time.Second)
 		}
-		time.Sleep(time.Second)
 	}
+	go sf()
 }
 
 //redis
@@ -189,8 +211,13 @@ func mongoExample() {
 		log.Printf("connect mongo failed, err:%v", err)
 		return
 	}
-	defer mgo.C(dbName).Disconnect()
-	count, err := mgo.C(dbName).Count(dbCol, nil)
+	conn := mgo.C(dbName)
+	if conn == nil {
+		log.Println("can't get conn")
+		return
+	}
+	defer conn.Disconnect()
+	count, err := conn.Count(dbCol, nil)
 	log.Printf("get count:%v, err:%v", count, err)
 }
 
