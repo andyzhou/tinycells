@@ -130,7 +130,7 @@ func (f *App) SetTplPath(path string) bool {
 	}
 
 	//init templates
-	f.server.LoadHTMLGlob(fmt.Sprintf("%v/*", f.tplPath))
+	f.server.LoadHTMLGlob(fmt.Sprintf("%v", f.tplPath))
 	return true
 }
 
