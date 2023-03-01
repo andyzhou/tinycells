@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/andyzhou/tinycells"
+	"github.com/andyzhou/tinycells/util"
 	"github.com/andyzhou/tinycells/web"
 	"github.com/urfave/cli/v2"
 	"log"
@@ -14,6 +15,7 @@ func main() {
 		wg sync.WaitGroup
 	)
 
+	timeExample()
 	cmdExample()
 	loggerExample()
 	mongoExample()
@@ -24,6 +26,16 @@ func main() {
 	//wait
 	wg.Add(1)
 	wg.Wait()
+}
+
+//time example
+func timeExample() {
+	now := time.Now().Unix()
+	u := util.Util{}
+	dayStr := u.TimeStampToDayStr(now)
+	log.Println("dayStr:", dayStr)
+	diffTimeStr := u.DiffTimeStampToStr(1677334000)
+	log.Println("diffTimeStr:", diffTimeStr)
 }
 
 //web app

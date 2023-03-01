@@ -2,8 +2,19 @@ package util
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"time"
+)
+
+//macro define
+const (
+	OneMinSec = 60
+	OneHourSec = OneMinSec * 60
+	OneDaySec = OneHourSec * 24
+	OneMonthSec = OneDaySec * 30
+	OneYearSec = OneMonthSec * 12
 )
 
 //begin of time period
@@ -68,6 +79,57 @@ func (u *Util) TimeStamp2Date(timeStamp int64) string {
 		return ""
 	}
 	return tempSlice[0]
+}
+
+//convert timestamp like 'Oct 10, 2020' format
+func (u *Util) TimeStampToDayStr(timeStamp int64) string {
+	date := u.TimeStamp2Date(timeStamp)
+	if date == "" {
+		return  ""
+	}
+	tempSlice := strings.Split(date, "-")
+	if tempSlice == nil || len(tempSlice) < 3 {
+		return ""
+	}
+	year := tempSlice[0]
+	month, _ := strconv.Atoi(tempSlice[1])
+	day := tempSlice[2]
+	return fmt.Sprintf("%s %s, %s", time.Month(month).String(), day, year)
+}
+
+//convert diff seconds as string, like 'xx year | xx day | xx hours ago' format
+func (u *Util) DiffTimeStampToStr(timeStamp int64) string {
+	if timeStamp <= 0 {
+		return ""
+	}
+	now := time.Now().Unix()
+	diffSeconds := now - timeStamp
+	if diffSeconds <= 0 {
+		return ""
+	}
+
+	//calculate years
+	years := int(math.Floor(float64(diffSeconds) / float64(OneYearSec)))
+	months := int(math.Floor(float64(diffSeconds) / float64(OneMonthSec)))
+	days := int(math.Floor(float64(diffSeconds) / float64(OneDaySec)))
+	hours := int(math.Floor(float64(diffSeconds) / float64(OneHourSec)))
+	minutes := int(math.Floor(float64(diffSeconds) / float64(OneMinSec)))
+	if years > 0 {
+		return fmt.Sprintf("%v years", years)
+	}
+	if months > 0 {
+		return fmt.Sprintf("%v months", months)
+	}
+	if days > 0 {
+		return fmt.Sprintf("%v days", days)
+	}
+	if hours > 0 {
+		return fmt.Sprintf("%v hours", hours)
+	}
+	if minutes > 0 {
+		return fmt.Sprintf("%v minutes", minutes)
+	}
+	return ""
 }
 
 //get current date, like YYYY-MM-DD
