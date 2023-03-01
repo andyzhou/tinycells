@@ -29,7 +29,7 @@ func main() {
 //web app
 func webAppExample()  {
 	app := web.NewApp()
-	app.SetTplPath("./tpl/*/*.html")
+	app.SetTplPattern("./tpl/*/*.html")
 	app.RegisterSubApp("/", NewSubApp())
 	go app.Start(8090)
 }

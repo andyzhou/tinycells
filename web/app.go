@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"html/template"
-	"os"
 	"sync"
 )
 
@@ -26,7 +25,7 @@ type IWebSubApp interface {
 type App struct {
 	port int //web port
 	server *gin.Engine //gin server
-	tplPath string //tpl root path
+	tplPattern string //tpl pattern
 	//runner *iris.Runner //iris runner
 	wg sync.WaitGroup
 }
@@ -112,25 +111,15 @@ func (f *App) SetStaticPath(url, path string) bool {
 	return true
 }
 
-//set tpl root path
-func (f *App) SetTplPath(path string) bool {
-	if path == "" {
+//set tpl pattern
+func (f *App) SetTplPattern(pattern string) bool {
+	if pattern == "" {
 		return false
 	}
-	//set tpl path
-	f.tplPath = path
-
-	//check path
-	info, err := os.Stat(path)
-	if err != nil || info == nil {
-		return false
-	}
-	if !info.IsDir() {
-		return false
-	}
-
+	//set tpl pattern
+	f.tplPattern = pattern
 	//init templates
-	f.server.LoadHTMLGlob(fmt.Sprintf("%v", f.tplPath))
+	f.server.LoadHTMLGlob(fmt.Sprintf("%v", f.tplPattern))
 	return true
 }
 
