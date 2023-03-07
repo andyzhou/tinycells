@@ -65,7 +65,7 @@ func (f *Cmd) InitApp(sf StartFunc, appNames ...string) error {
 func (f *Cmd) RegisterBoolFlag(nameTag string, usages ...string) error {
 	return f.RegisterNewFlag(nameTag, FlagKindOfBool, usages...)
 }
-func (f *Cmd) RegisterInitFlag(nameTag string, usages ...string) error {
+func (f *Cmd) RegisterIntFlag(nameTag string, usages ...string) error {
 	return f.RegisterNewFlag(nameTag, FlagKindOfInt, usages...)
 }
 func (f *Cmd) RegisterStringFlag(nameTag string, usages ...string) error {
