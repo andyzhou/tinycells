@@ -32,6 +32,7 @@ func NewConnect(conf *Config) *Connect {
 		checkChan: make(chan struct{}, 1),
 		closeChan: make(chan struct{}, 1),
 	}
+	this.interInit()
 	go this.poolChecker()
 	return this
 }
@@ -191,17 +192,6 @@ func (f *Connect) poolChecker() {
 		f.releasePool()
 	}()
 
-	//check
-	if f.dbConf.PoolSize <= 0 {
-		f.dbConf.PoolSize = DBPoolMin
-	}
-
-	//format address
-	f.address = f.getDBAddress()
-
-	//fill pool map
-	f.fillPoolMap()
-
 	//start first checker
 	f.checkChan <- struct{}{}
 
@@ -303,4 +293,18 @@ func (f *Connect) getDBAddress() string {
 		f.dbConf.Host, f.dbConf.Port,
 		f.dbConf.DBName,
 	)
+}
+
+//inter init
+func (f *Connect) interInit() {
+	//check
+	if f.dbConf.PoolSize <= 0 {
+		f.dbConf.PoolSize = DBPoolMin
+	}
+
+	//format address
+	f.address = f.getDBAddress()
+
+	//fill pool map
+	f.fillPoolMap()
 }
