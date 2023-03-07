@@ -21,6 +21,11 @@ func NewCmd() *Cmd {
 	return this
 }
 
+//get flag
+func (f *Cmd) GetFlag() *Flag {
+	return f.flag
+}
+
 //start app, step-3
 func (f *Cmd) StartApp() error {
 	//check
