@@ -188,7 +188,7 @@ func (f *JsonData) GetBatchData(
 			db *Connect,
 		) ([][]byte, error) {
 	recordsMap, err := f.GetBatchDataAdv(
-		"",
+		nil,
 		whereMap,
 		orderBy,
 		offset,
@@ -219,7 +219,7 @@ func (f *JsonData) GetBatchData(
 }
 
 func (f *JsonData) GetBatchDataAdv(
-			selectFields string,
+			dataFields []string,
 			whereMap map[string]WherePara,
 			orderBy string,
 			offset int,
@@ -230,15 +230,25 @@ func (f *JsonData) GetBatchDataAdv(
 	var (
 		limitSql, orderBySql string
 		values = make([]interface{}, 0)
+		dataFieldBuffer = bytes.NewBuffer(nil)
 	)
 
 	//basic check
 	if table == "" || db == nil {
-		return nil, errors.New("invalid paramter")
+		return nil, errors.New("invalid parameter")
 	}
 
-	if selectFields == "" {
-		selectFields = "data"
+	//format data fields
+	if dataFields == nil || len(dataFields) <= 0 {
+		dataFields = []string{"data"}
+	}
+	i := 0
+	for _, dataField := range dataFields {
+		if i > 0 {
+			dataFieldBuffer.WriteString(",")
+		}
+		dataFieldBuffer.WriteString(dataField)
+		i++
 	}
 
 	//format where sql
@@ -259,7 +269,7 @@ func (f *JsonData) GetBatchDataAdv(
 
 	//format sql
 	sql := fmt.Sprintf("SELECT %s FROM %s %s %s %s",
-		selectFields,
+		dataFieldBuffer.String(),
 		table,
 		whereBuffer.String(),
 		orderBySql,
