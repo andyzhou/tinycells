@@ -31,6 +31,7 @@ type JsonData struct {}
 func (f *JsonData) GetMaxVal(
 			jsonField string,
 			whereMap map[string]WherePara,
+			objField string,
 			table string,
 			db *Connect,
 		) (int64, error) {
@@ -43,6 +44,9 @@ func (f *JsonData) GetMaxVal(
 	if jsonField == "" || table == "" || db == nil {
 		return max, errors.New("invalid parameter")
 	}
+	if objField == "" {
+		objField = TableFieldOfData
+	}
 
 	//format where sql
 	whereBuffer, whereValues := f.formatWhereSql(whereMap)
@@ -51,8 +55,8 @@ func (f *JsonData) GetMaxVal(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("SELECT max(json_extract(data, '$.%s')) as max FROM %s %s",
-		jsonField, table, whereBuffer.String(),
+	sql := fmt.Sprintf("SELECT max(json_extract(%v, '$.%s')) as max FROM %s %s",
+		objField, jsonField, table, whereBuffer.String(),
 	)
 
 	//query one record
@@ -69,6 +73,7 @@ func (f *JsonData) GetMaxVal(
 func (f *JsonData) SumCount(
 			jsonField string,
 			whereMap map[string]WherePara,
+			objField string,
 			table string,
 			db *Connect,
 		) (int64, error) {
@@ -81,6 +86,9 @@ func (f *JsonData) SumCount(
 	if jsonField == "" || table == "" || db == nil {
 		return total, errors.New("invalid parameter")
 	}
+	if objField == "" {
+		objField = TableFieldOfData
+	}
 
 	//format where sql
 	whereBuffer, whereValues := f.formatWhereSql(whereMap)
@@ -89,8 +97,8 @@ func (f *JsonData) SumCount(
 	}
 
 	//format sql
-	sql := fmt.Sprintf("SELECT sum(json_extract(data, '$.%s')) as total FROM %s %s",
-		jsonField, table, whereBuffer.String(),
+	sql := fmt.Sprintf("SELECT sum(json_extract(%v, '$.%s')) as total FROM %s %s",
+		objField, jsonField, table, whereBuffer.String(),
 	)
 
 	//query one record
@@ -859,6 +867,7 @@ func (f *JsonData) AddDataWithDuplicate(
 			jsonByte []byte,
 			updateMap map[string]interface{},
 			isInc bool,
+			objField string,
 			table string,
 			db *Connect,
 		) error {
@@ -872,6 +881,9 @@ func (f *JsonData) AddDataWithDuplicate(
 	if jsonByte == nil || db == nil || updateMap == nil {
 		return errors.New("invalid parameter")
 	}
+	if objField == "" {
+		objField = TableFieldOfData
+	}
 
 	//init update buffer
 	tempStr = fmt.Sprintf("data = json_set(data, ")
@@ -884,8 +896,8 @@ func (f *JsonData) AddDataWithDuplicate(
 			updateBuffer.WriteString(", ")
 		}
 		if isInc {
-			tempStr = fmt.Sprintf("'$.%s', GREATEST(json_extract(data, '$.%s') + ?, 0)",
-				field, field)
+			tempStr = fmt.Sprintf("'$.%s', GREATEST(json_extract(%v, '$.%s') + ?, 0)",
+				field, objField, field)
 		}else{
 			tempStr = fmt.Sprintf("'$.%s', ?", field)
 		}
