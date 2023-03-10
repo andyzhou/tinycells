@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/andyzhou/tinycells"
+	"github.com/andyzhou/tinycells/db/mysql"
 	"github.com/andyzhou/tinycells/util"
 	"github.com/andyzhou/tinycells/web"
 	"github.com/urfave/cli/v2"
@@ -130,37 +131,56 @@ func webAppExample()  {
 func mysqlExample() {
 	//get sub instance
 	tc := tinycells.GetTC()
-	mysql := tc.GetDB().GetMysql()
+	db := tc.GetDB().GetMysql()
 
 	//db tag
 	dbTag := "sys"
 
 	//gen config
-	config := mysql.GenNewConfig()
+	config := db.GenNewConfig()
 	config.Host = "127.0.0.1"
 	config.Port = 3306
 	config.User = "root"
 	config.Password = "123456"
-	config.DBName = "sys"
+	config.DBName = "adam"
 
 	//create connect
-	conn, err := mysql.CreateConnect(dbTag, config)
+	conn, err := db.CreateConnect(dbTag, config)
 	if err != nil {
 		log.Printf("connect mysql failed, err:%v\n", err)
 		return
 	}
-	sf := func() {
-		for {
-			err = conn.Ping()
-			log.Printf("connect mysql succeed, ping result %v\n", err)
-			if err == nil {
-				record, err := conn.GetRow("SELECT * FROM sys_config")
-				log.Printf("record:%v, err:%v\n", record, err)
-			}
-			time.Sleep(time.Second)
-		}
+	time.Sleep(time.Second)
+	err = conn.Ping()
+	log.Printf("connect mysql succeed, ping result %v\n", err)
+	if err != nil {
+		return
 	}
-	go sf()
+
+	//query
+	record, err := conn.GetRow("SELECT * FROM sys_config")
+	log.Printf("record:%v, err:%v\n", record, err)
+	return
+
+	//update
+	updateMap := map[string]interface{}{
+		"reviews":1,
+	}
+	where := map[string]mysql.WherePara{
+		"subjectId":{
+			Val: "31",
+		},
+	}
+	tab := "sparrow_subject"
+	tabField := "count"
+	err = db.UpdateCountOfDataAdv(
+				updateMap,
+				where,
+				tabField,
+				tab,
+				conn,
+			)
+	log.Println(err)
 }
 
 //redis
