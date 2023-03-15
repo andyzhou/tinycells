@@ -109,6 +109,24 @@ func NewImageResizeWithPara(
 	return this
 }
 
+
+//set cut corp para
+func (i *ImageResize) SetCutCorpPara(cropHeight int) {
+	i.cropHeight = cropHeight
+	giftFilter := gift.CropToSize(i.scaleWidth, cropHeight, gift.CenterAnchor)
+	found := false
+	for _, v := range i.filters {
+		if v == ImgCropToSize {
+			found = true
+			break
+		}
+	}
+	if !found {
+		i.filters = append(i.filters, ImgCropToSize)
+	}
+	i.gfs[ImgCropToSize] = gift.New(giftFilter)
+}
+
 // Decode reads and analyzes the given reader as a GIF image
 func (i *ImageResize) SplitAnimatedGif(
 			fileName string, needAll bool,
