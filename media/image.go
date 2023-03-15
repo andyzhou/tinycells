@@ -1,6 +1,7 @@
 package media
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/disintegration/gift"
@@ -277,7 +278,11 @@ func (i *ImageResize) ProcessOneGift(gf *gift.GIFT, src image.Image) image.Image
 }
 
 //resize image from io reader
-func (i *ImageResize) ResizeFromIOReader(reader *os.File) (image.Image, error) {
+//convert to []byte, error
+func (i *ImageResize) ResizeFromIOReader(
+				reader *os.File,
+				isPng ...bool,
+			) ([]byte, error) {
 	//check
 	if reader == nil {
 		return nil, errors.New("invalid file")
@@ -287,23 +292,28 @@ func (i *ImageResize) ResizeFromIOReader(reader *os.File) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
+	//begin resize and crop image
+	for _, name := range i.filters {
+		gf, ok := i.gfs[name]
+		if !ok {
+			continue
+		}
+		img = i.ProcessOneGift(gf, img)
+	}
 
-	//create reader
-	//reader := base64.NewDecoder(base64.StdEncoding, bytes.NewReader(data))
-	//imgSrc, _, err := image.Decode(reader)
-	//if err != nil {
-	//	log.Println("ImageService::ResizeImageFromByte failed, err:", err.Error())
-	//	return false, nil
-	//}
-	//begin resize image
-	//dst := image.NewNRGBA(i.gf.Bounds(imgSrc.Bounds()))
-	//i.gf.Draw(dst, imgSrc)
-	//size := len(dst.Pix)
-	//log.Println("file size:", size)
-	//save file
-	//dstFilePath := "/Volumes/DATA/project/src/gfs/test.png"
-	//bRet := i.saveImage(dstFilePath, dst)
-	return img, nil
+	//convert to bytes
+	buf := new(bytes.Buffer)
+	if isPng != nil && isPng[0] {
+		//for png
+		err = png.Encode(buf, img)
+	}else{
+		//for jpg
+		err = jpeg.Encode(buf, img, &jpeg.Options{Quality: jpeg.DefaultQuality})
+	}
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 //save dst image file
@@ -338,6 +348,13 @@ func (i *ImageResize) SaveImage(filePath string, img image.Image) error {
 		}
 	}
 	return err
+}
+
+//load file
+func (i *ImageResize) LoadFile(filePath string) (*os.File, error) {
+	//try open file
+	f, err := os.Open(filePath)
+	return f, err
 }
 
 //load original image file

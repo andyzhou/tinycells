@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/andyzhou/tinycells"
 	"github.com/andyzhou/tinycells/db/mysql"
 	"github.com/andyzhou/tinycells/media"
@@ -8,6 +9,7 @@ import (
 	"github.com/andyzhou/tinycells/web"
 	"github.com/urfave/cli/v2"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
@@ -37,7 +39,22 @@ func main() {
 func imageExample() {
 	file := "test.png"
 	img := media.NewImageResize(64)
-	img.ResizeFromFile(file)
+	f, err := img.LoadFile(file)
+	if err != nil {
+		log.Println("err:", err)
+		return
+	}
+	defer f.Close()
+	//img.ResizeFromFile(file)
+	imgByte, err := img.ResizeFromIOReader(f)
+	log.Println("imgByte:", len(imgByte), ", err:", err)
+
+	newFile := fmt.Sprintf("%v.png", time.Now().Unix())
+	f1, err := os.Create(newFile)
+	if f1 != nil {
+		f1.Write(imgByte)
+		f1.Close()
+	}
 }
 
 //time example
