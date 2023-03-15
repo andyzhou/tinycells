@@ -1,8 +1,15 @@
+# github.com/aaparella/carve v0.0.0-20170326000725-5e7ef0c30a14
+## explicit
 # github.com/cpuguy83/go-md2man/v2 v2.0.2
 github.com/cpuguy83/go-md2man/v2/md2man
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
+# github.com/disintegration/gift v1.2.1
+## explicit
+github.com/disintegration/gift
+# github.com/disintegration/imaging v1.6.2
+## explicit
 # github.com/gin-contrib/sse v0.1.0
 github.com/gin-contrib/sse
 # github.com/gin-gonic/gin v1.7.7
@@ -142,6 +149,10 @@ golang.org/x/crypto/pbkdf2
 golang.org/x/crypto/sha3
 golang.org/x/crypto/ssh
 golang.org/x/crypto/ssh/internal/bcrypt_pbkdf
+# golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8
+## explicit
+golang.org/x/image/draw
+golang.org/x/image/math/f64
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1

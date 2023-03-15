@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/andyzhou/tinycells"
 	"github.com/andyzhou/tinycells/db/mysql"
+	"github.com/andyzhou/tinycells/media"
 	"github.com/andyzhou/tinycells/util"
 	"github.com/andyzhou/tinycells/web"
 	"github.com/urfave/cli/v2"
@@ -16,6 +17,9 @@ func main() {
 		wg sync.WaitGroup
 	)
 
+	imageExample()
+	return
+
 	timeExample()
 	cmdExample()
 	loggerExample()
@@ -27,6 +31,13 @@ func main() {
 	//wait
 	wg.Add(1)
 	wg.Wait()
+}
+
+//image example
+func imageExample() {
+	file := "test.png"
+	img := media.NewImageResize(64)
+	img.ResizeFromFile(file)
 }
 
 //time example
