@@ -19,7 +19,7 @@ func main() {
 		wg sync.WaitGroup
 	)
 
-	imageExample()
+	mysqlExample()
 	return
 
 	timeExample()
@@ -29,6 +29,7 @@ func main() {
 	redisExample()
 	mysqlExample()
 	webAppExample()
+	imageExample()
 
 	//wait
 	wg.Add(1)
@@ -172,20 +173,25 @@ func mysqlExample() {
 	config.Password = "123456"
 	config.DBName = "adam"
 
-	//create connect
-	conn, err := db.CreateConnect(dbTag, config)
-	if err != nil {
-		log.Printf("connect mysql failed, err:%v\n", err)
-		return
-	}
-	time.Sleep(time.Second)
-	err = conn.Ping()
-	log.Printf("connect mysql succeed, ping result %v\n", err)
-	if err != nil {
-		return
+
+	for {
+		//create connect
+		conn, err := db.CreateConnect(dbTag, config)
+		if err != nil {
+			log.Printf("connect mysql failed, err:%v\n", err)
+			return
+		}
+		time.Sleep(time.Second)
+		err = conn.Ping()
+		log.Printf("connect mysql succeed, ping result %v\n", err)
+		if err != nil {
+			return
+		}
+		break
 	}
 
 	//query
+	conn := db.GetConnect(dbTag)
 	record, err := conn.GetRow("SELECT * FROM sys_config")
 	log.Printf("record:%v, err:%v\n", record, err)
 	return

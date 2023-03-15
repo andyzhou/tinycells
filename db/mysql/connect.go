@@ -262,7 +262,11 @@ func (f *Connect) releasePool() {
 //fill pool map
 func (f *Connect) fillPoolMap() {
 	for i := 0; i < f.dbConf.PoolSize; i++ {
-		f.poolMap[i] = nil
+		db, err := f.connectServer()
+		if err != nil || db == nil {
+			continue
+		}
+		f.poolMap[i] = db
 	}
 	f.poolSize = len(f.poolMap)
 }
