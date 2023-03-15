@@ -10,6 +10,7 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -280,7 +281,7 @@ func (i *ImageResize) ProcessOneGift(gf *gift.GIFT, src image.Image) image.Image
 //resize image from io reader
 //convert to []byte, error
 func (i *ImageResize) ResizeFromIOReader(
-				reader *os.File,
+				reader io.Reader,
 				isPng ...bool,
 			) ([]byte, error) {
 	//check
