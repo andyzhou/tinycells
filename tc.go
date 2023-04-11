@@ -7,6 +7,7 @@ import (
 	"github.com/andyzhou/tinycells/crypt"
 	"github.com/andyzhou/tinycells/db"
 	"github.com/andyzhou/tinycells/logger"
+	"github.com/andyzhou/tinycells/sys"
 	"github.com/andyzhou/tinycells/web"
 
 	//"github.com/andyzhou/tinycells/mq"
@@ -25,6 +26,7 @@ type TinyCells struct {
 	//mq *mq.MQ
 	wb *web.Web
 	db *db.DB
+	single *sys.Signal
 	logger *logger.Logger
 	cmd *cmd.Cmd
 	crypt *crypt.Crypt
@@ -46,6 +48,7 @@ func NewTinyCells() *TinyCells {
 		//mq: mq.NewMQ(),
 		wb: web.NewWeb(),
 		db: db.NewDB(),
+		single: sys.NewSignal(),
 		logger: logger.NewLogger(),
 		cmd: cmd.NewCmd(),
 		crypt: crypt.NewCrypt(),
@@ -89,6 +92,11 @@ func (f *TinyCells) SetupConfig(params ...interface{}) error {
 //func (f *TinyCells) GetMQ() *mq.MQ {
 //	return f.mq
 //}
+
+//get single
+func (f *TinyCells) GetSingle() *sys.Signal {
+	return f.single
+}
 
 //get web
 func (f *TinyCells) GetWeb() *web.Web {
