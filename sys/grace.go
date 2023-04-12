@@ -60,31 +60,11 @@ type Grace struct {
 }
 
 //construct
-func NewGrace(port, tcpKind int) *Grace {
-	//init address
-	address := fmt.Sprintf(":%d", port)
-
+func NewGrace() *Grace {
 	//self init
 	this := &Grace{
-		port:port,
-		address:address,
-		tcpKind:tcpKind,
 		httpHandlers:make(map[string]bool),
 	}
-
-	//init tcp listener
-	// Create (or import) a net.Listener and start a goroutine that runs
-	// a TCP/HTTP server on that net.Listener.
-	listener, err := this.createOrImportListener(address)
-	if err != nil {
-		tips := fmt.Sprintf("Create or import listener failed, err:%v", err.Error())
-		log.Println(tips)
-		panic(tips)
-	}
-
-	//sync listener
-	this.listener = listener
-
 	return this
 }
 
@@ -182,6 +162,23 @@ func (g *Grace) Quit() {
 
 //start
 func (g *Grace) Start() error {
+	//check
+	if g.port <= 0 || g.address == "" {
+		return errors.New("port or address not setup")
+	}
+
+	//init tcp listener
+	// Create (or import) a net.Listener and start a goroutine that runs
+	// a TCP/HTTP server on that net.Listener.
+	listener, err := g.createOrImportListener(g.address)
+	if err != nil {
+		tips := fmt.Sprintf("Create or import listener failed, err:%v", err.Error())
+		log.Println(tips)
+		panic(tips)
+	}
+
+	//sync listener
+	g.listener = listener
 	if !g.isAttach {
 		//check and start http service
 		if g.httpServer != nil {
@@ -191,6 +188,22 @@ func (g *Grace) Start() error {
 
 	//try watch signals
 	return g.waitForSignals()
+}
+
+//setup
+func (g *Grace) SetUp(port, tcpKind int) error {
+	//check
+	if port <= 0 ||
+		tcpKind < TcpKindGen ||
+		tcpKind > TcpKindSocket {
+		return errors.New("invalid parameter")
+	}
+	//init address
+	address := fmt.Sprintf(":%d", port)
+	g.port = port
+	g.address = address
+	g.tcpKind = tcpKind
+	return nil
 }
 
 /////////////////
