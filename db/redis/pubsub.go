@@ -2,13 +2,14 @@ package redis
 
 import (
 	"errors"
+	"github.com/go-redis/redis/v7"
 	"log"
 	"sync"
 )
 
 //inter data
 type (
-	PubSubCallback func(interface{})
+	PubSubCallback func(msg *redis.Message) error
 )
 
 //face info
@@ -89,7 +90,7 @@ func (f *PubSub) Subscript(channelName string, cb PubSubCallback) error {
 	f.chanMap[channelName] = closeChan
 
 	//run sub process
-	sf := func(channelName string, ch chan struct{}) {
+	sf := func(channelName string, closeChan chan struct{}, cb PubSubCallback) {
 		defer func() {
 			if err := recover(); err != nil {
 				log.Printf("PubSub:Subscript channel %v panic, err %v", channelName, err)
@@ -110,15 +111,15 @@ func (f *PubSub) Subscript(channelName string, cb PubSubCallback) error {
 		for {
 			select {
 			case data, ok := <- dataChan:
-				if ok {
-					cb(data.Payload)
+				if ok && cb != nil{
+					cb(data)
 				}
-			case <- ch:
+			case <- closeChan:
 				return
 			}
 		}
 	}
-	go sf(channelName, closeChan)
+	go sf(channelName, closeChan, cb)
 	return nil
 }
 
