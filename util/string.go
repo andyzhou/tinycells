@@ -3,6 +3,8 @@ package util
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"regexp"
+	"strings"
 	"unicode"
 )
 
@@ -72,4 +74,27 @@ func (u *Util) GenMd5(orgString string) string {
 	m := md5.New()
 	m.Write([]byte(orgString))
 	return hex.EncodeToString(m.Sum(nil))
+}
+
+//remove html tags
+func (u *Util) TrimHtml(src string, needLower bool) string {
+	var (
+		re *regexp.Regexp
+	)
+
+	if needLower {
+		//convert to lower
+		re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
+		src = re.ReplaceAllStringFunc(src, strings.ToLower)
+	}
+
+	//remove style
+	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
+	src = re.ReplaceAllString(src, "")
+
+	//remove script
+	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
+	src = re.ReplaceAllString(src, "")
+
+	return strings.TrimSpace(src)
 }
