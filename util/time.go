@@ -57,6 +57,78 @@ func (u *Util) TimeStamp2DateTime(timeStamp int64) string {
 	return time.Unix(timeStamp, 0).UTC().Format(TimeLayoutStr)
 }
 
+//convert time string format to int format
+func (u *Util) TimeStr2Seconds(timeStr string) int {
+	var (
+		timeSeconds int
+		tempIntVal int
+		tempFloatVal float64
+	)
+
+	//basic check
+	if timeStr == "" {
+		return timeSeconds
+	}
+
+	i := 1
+	tempSlice := strings.Split(timeStr, ":")
+	for _, info := range tempSlice {
+		switch i {
+		case 1://hour
+			tempIntVal, _ = strconv.Atoi(info)
+			timeSeconds += tempIntVal * 3600
+		case 2://minute
+			tempIntVal, _ = strconv.Atoi(info)
+			timeSeconds += tempIntVal * 60
+		case 3:	//second
+			tempFloatVal, _ = strconv.ParseFloat(info, 64)
+			timeSeconds += int(tempFloatVal)
+		}
+		i++
+	}
+
+	return timeSeconds
+}
+
+//convert seconds to time string format
+func (u *Util) Seconds2TimeStr(seconds int) string {
+	var (
+		hourStr, minuteStr, secondStr string
+	)
+
+	if seconds <= 0 {
+		return ""
+	}
+
+	hourInt := seconds / 3600
+	minuteInt := (seconds - hourInt * 3600) / 60
+	secondInt := seconds - hourInt * 3600 - minuteInt * 60
+
+	if hourInt > 0 {
+		if hourInt > 9 {
+			hourStr = fmt.Sprintf("%d:", hourInt)
+		}else{
+			hourStr = fmt.Sprintf("0%d:", hourInt)
+		}
+	}
+
+	if minuteInt > 9 {
+		minuteStr = fmt.Sprintf("%d", minuteInt)
+	}else{
+		minuteStr = fmt.Sprintf("0%d", minuteInt)
+	}
+
+	if secondInt > 9 {
+		secondStr = fmt.Sprintf("%d", secondInt)
+	}else{
+		secondStr = fmt.Sprintf("0%d", secondInt)
+	}
+
+	//format time string
+	timeStr := fmt.Sprintf("%s%s:%s", hourStr, minuteStr, secondStr)
+	return timeStr
+}
+
 //convert date time string to timestamp
 func (u *Util) DateTime2Unix(dateTime string) (int64, error) {
 	//remove un useful info
