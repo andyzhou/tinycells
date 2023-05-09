@@ -62,10 +62,19 @@ func (f *Base) GetRequestBody(c gin.Context) ([]byte, error) {
 }
 
 //get request para
-func (f *Base) GetPara(name string, c *gin.Context) string {
-	//decode request url
-	//decodedReqUrl, _ := url.PathUnescape(c.Request.URL.RawQuery)
-	values, _ := url.ParseQuery(c.Request.URL.RawQuery)
+func (f *Base) GetPara(name string, c *gin.Context, needDecode ...bool) string {
+	var (
+		queryPath string
+	)
+
+	//get query path
+	queryPath = c.Request.URL.RawQuery
+	if needDecode != nil && len(needDecode) > 0 {
+		if needDecode[0] {
+			queryPath, _ = url.PathUnescape(queryPath)
+		}
+	}
+	values, _ := url.ParseQuery(queryPath)
 
 	//get act from url
 	if values != nil {
