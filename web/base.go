@@ -64,8 +64,8 @@ func (f *Base) GetRequestBody(c gin.Context) ([]byte, error) {
 //get request para
 func (f *Base) GetPara(name string, c *gin.Context) string {
 	//decode request url
-	decodedReqUrl, _ := url.PathUnescape(c.Request.URL.RawQuery)
-	values, _ := url.ParseQuery(decodedReqUrl)
+	//decodedReqUrl, _ := url.PathUnescape(c.Request.URL.RawQuery)
+	values, _ := url.ParseQuery(c.Request.URL.RawQuery)
 
 	//get act from url
 	if values != nil {
