@@ -593,6 +593,7 @@ func (f *JsonData) UpdateCountOfData(
 			whereMap map[string]WherePara,
 			table string,
 			db *Connect,
+			isOverWrites ...bool,
 		) error {
 	return f.UpdateCountOfDataAdv(
 		updateMap,
@@ -600,6 +601,7 @@ func (f *JsonData) UpdateCountOfData(
 		TableFieldOfData,
 		table,
 		db,
+		isOverWrites...,
 	)
 }
 
@@ -609,6 +611,7 @@ func (f *JsonData) UpdateCountOfDataAdv(
 			objField string,
 			table string,
 			db *Connect,
+			isOverWrites ...bool,
 		) error {
 	var (
 		tempStr string
@@ -632,6 +635,12 @@ func (f *JsonData) UpdateCountOfDataAdv(
 		objField = "data"
 	}
 
+	//is just over write new count value?
+	isOverWrite := false
+	if isOverWrites != nil && len(isOverWrites) > 0 {
+		isOverWrite = isOverWrites[0]
+	}
+
 	//format update field sql
 	tempStr = fmt.Sprintf("json_set(%s ", objField)
 	updateBuffer.WriteString(tempStr)
@@ -642,9 +651,16 @@ func (f *JsonData) UpdateCountOfDataAdv(
 		default:
 			objDefaultVal = 0
 		}
-		tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v), '$.%s', " +
-			"GREATEST(IFNULL(json_extract(%s, '$.%s'), 0) + ?, 0)",
-			field, objField, field, objDefaultVal, field, objField, field)
+		if isOverWrite {
+			//overwrite count new value
+			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v), '$.%s', ?",
+				field, objField, field, objDefaultVal, field)
+		}else{
+			//inc count new value
+			tempStr = fmt.Sprintf(", '$.%s', IFNULL(%s->'$.%s', %v), '$.%s', " +
+				"GREATEST(IFNULL(json_extract(%s, '$.%s'), 0) + ?, 0)",
+				field, objField, field, objDefaultVal, field, objField, field)
+		}
 		updateBuffer.WriteString(tempStr)
 		values = append(values, val)
 	}
