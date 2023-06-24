@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"github.com/andyzhou/tinycells"
 	"github.com/andyzhou/tinycells/db/mysql"
+	"github.com/andyzhou/tinycells/db/redis"
 	"github.com/andyzhou/tinycells/media"
 	"github.com/andyzhou/tinycells/util"
 	"github.com/andyzhou/tinycells/web"
+	genRedis "github.com/go-redis/redis/v7"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -14,12 +16,17 @@ import (
 	"time"
 )
 
+const (
+	redisServer = "127.0.0.1:6381"
+	pubSubChan = "ps_channel"
+)
+
 func main() {
 	var (
 		wg sync.WaitGroup
 	)
 
-	mysqlExample()
+	redisExample()
 	return
 
 	timeExample()
@@ -156,6 +163,11 @@ func webAppExample()  {
 //	log.Printf("kafka example done!\n")
 //}
 
+//global variable
+var (
+	pubSubWg sync.WaitGroup
+)
+
 //mysql
 func mysqlExample() {
 	//get sub instance
@@ -218,6 +230,14 @@ func mysqlExample() {
 }
 
 //redis
+func cbForPubSub(msg *genRedis.Message) error {
+	channel := msg.Channel
+	info := msg.Payload
+	fmt.Println("channel:", channel, ", info:", info)
+	pubSubWg.Done()
+	return nil
+}
+
 func redisExample() {
 	//get sub instance
 	tc := tinycells.GetTC()
@@ -228,7 +248,7 @@ func redisExample() {
 
 	//gen config
 	config := rd.GenNewConfig()
-	config.Addr = "127.0.0.1:6379"
+	config.Addr = redisServer
 	config.DBTag = dbName
 	config.DBNum = 0
 
@@ -241,7 +261,8 @@ func redisExample() {
 	defer rd.C(dbName).Disconnect()
 
 	//get client connect
-	rc := rd.C(dbName).GetConnect()
+	client := rd.C(dbName)
+	rc := client.GetConnect()
 
 	//ping
 	result, err := rc.Ping().Result()
@@ -251,9 +272,25 @@ func redisExample() {
 	}
 	log.Printf("pind redis result:%v\n", result)
 
+	//test pub sub
+	ps := redis.NewPubSub()
+	ps.SetConn(client)
+	ps.Subscript(pubSubChan, cbForPubSub)
+
+	sf := func() {
+		ps.Publish(pubSubChan, "test")
+	}
+	time.AfterFunc(time.Second * 2, sf)
+
+	//init wg
+	pubSubWg.Add(1)
+	pubSubWg.Wait()
+
 	//get keys
-	keys, err := rc.Keys("*").Result()
-	log.Printf("keys:%v, err:%v\n", keys, err)
+	//keys, err := rc.Keys("*").Result()
+	//log.Printf("keys:%v, err:%v\n", keys, err)
+
+	log.Println("redis test done!")
 }
 
 //mongo
