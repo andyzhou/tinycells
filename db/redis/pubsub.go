@@ -21,7 +21,9 @@ type PubSub struct {
 
 //construct
 func NewPubSub() *PubSub {
-	this := &PubSub{}
+	this := &PubSub{
+		chanMap: map[string]chan struct{}{},
+	}
 	return this
 }
 
