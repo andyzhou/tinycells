@@ -25,8 +25,7 @@ func main() {
 	var (
 		wg sync.WaitGroup
 	)
-
-	redisExample()
+	dfaExample()
 	return
 
 	timeExample()
@@ -41,6 +40,14 @@ func main() {
 	//wait
 	wg.Add(1)
 	wg.Wait()
+}
+
+//dfa example
+func dfaExample() {
+	dfa := util.NewDFA()
+	dfa.AddFilterWords("你妈逼的", "狗日")
+	text := "我曹你妈逼的, 逼的你这个狗 日的，怎么这么傻啊。我也是服了，狗日的,这些话我都说不出口"
+	fmt.Println(dfa.ChangeSensitiveWords(text))
 }
 
 //image example
