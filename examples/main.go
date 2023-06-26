@@ -47,7 +47,9 @@ func dfaExample() {
 	dfa := util.NewDFA()
 	dfa.AddFilterWords("你妈逼的", "狗日")
 	text := "我曹你妈逼的, 逼的你这个狗 日的，怎么这么傻啊。我也是服了，狗日的,这些话我都说不出口"
-	fmt.Println(dfa.ChangeSensitiveWords(text))
+	found, newStr := dfa.ChangeSensitiveWords(text)
+	fmt.Println("found:", found)
+	fmt.Println(newStr)
 }
 
 //image example

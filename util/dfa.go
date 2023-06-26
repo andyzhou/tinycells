@@ -38,11 +38,12 @@ func NewDFA() *DFA {
 }
 
 //change words
-func (f *DFA) ChangeSensitiveWords(txt string) (word string){
+func (f *DFA) ChangeSensitiveWords(txt string) (bool, string){
 	str := []rune(txt)
 	nowMap := f.sensitiveWord
 	start := -1
 	tag := -1
+	hasFound := false
 	for i := 0; i < len(str); i++ {
 		if _, ok:= f.invalidWord[(string(str[i]))]; ok {
 			//if it is invalid word, skip it.
@@ -60,6 +61,7 @@ func (f *DFA) ChangeSensitiveWords(txt string) (word string){
 				//replace first to last char as `*`
 				for y := start; y < i+1; y++ {
 					str[y] = 42
+					hasFound = true
 				}
 				//reset
 				nowMap = f.sensitiveWord
@@ -70,7 +72,6 @@ func (f *DFA) ChangeSensitiveWords(txt string) (word string){
 				//not last, replace map to nowMap
 				nowMap = nowMap[string(str[i])].(map[string]interface{})
 			}
-
 		}else{
 			//if not full match, end found.
 			//check from second char
@@ -83,7 +84,7 @@ func (f *DFA) ChangeSensitiveWords(txt string) (word string){
 			tag = -1
 		}
 	}
-	return string(str)
+	return hasFound, string(str)
 }
 
 //reset filter words
