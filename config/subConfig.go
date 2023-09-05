@@ -77,7 +77,7 @@ func (c *SubConfig) preLoadConfig() bool {
 	//begin load config
 	err := c.conf.LoadConfig(c.confFile)
 	if err != nil {
-		log.Println("SubConfig::preLoadConfig failed, error:", err.Error())
+		log.Printf("SubConfig::preLoadConfig failed, file:%v, error:%v\n", c.confFile, err.Error())
 		return false
 	}
 
