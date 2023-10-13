@@ -15,6 +15,15 @@ func NewUtil() *Util {
 	return this
 }
 
+//deep copy object
+func (f *Util) DeepCopy(src, dist interface{}) (err error){
+	buf := bytes.Buffer{}
+	if err = gob.NewEncoder(&buf).Encode(src); err != nil {
+		return
+	}
+	return gob.NewDecoder(&buf).Decode(dist)
+}
+
 //get rand number
 func (u *Util) GetRandomVal(maxVal int) int {
 	randSand := rand.NewSource(time.Now().UnixNano())
