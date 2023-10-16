@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"encoding/gob"
 	"math/rand"
 	"time"
 )
