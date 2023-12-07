@@ -154,7 +154,10 @@ func (u *Util) TimeStamp2Date(timeStamp int64) string {
 }
 
 //convert timestamp like 'Oct 10, 2020' format
-func (u *Util) TimeStampToDayStr(timeStamp int64) string {
+func (u *Util) TimeStampToDayStr(timeStamp int64, monthSizes ...int) string {
+	var (
+		monthSize int
+	)
 	date := u.TimeStamp2Date(timeStamp)
 	if date == "" {
 		return  ""
@@ -163,10 +166,21 @@ func (u *Util) TimeStampToDayStr(timeStamp int64) string {
 	if tempSlice == nil || len(tempSlice) < 3 {
 		return ""
 	}
+	if monthSizes != nil && len(monthSizes) > 0 {
+		monthSize = monthSizes[0]
+	}
+
+	//get key info
 	year := tempSlice[0]
 	month, _ := strconv.Atoi(tempSlice[1])
 	day := tempSlice[2]
-	return fmt.Sprintf("%s %s, %s", time.Month(month).String(), day, year)
+
+	//get assigned size month info
+	monthInfo := time.Month(month).String()
+	if monthSize > 0 && monthSize <= len(monthInfo) {
+		monthInfo = monthInfo[:monthSize]
+	}
+	return fmt.Sprintf("%s %s, %s", monthInfo, day, year)
 }
 
 //convert diff seconds as string, like 'xx year | xx day | xx hours ago' format
