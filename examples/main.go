@@ -25,9 +25,11 @@ func main() {
 	var (
 		wg sync.WaitGroup
 	)
-	dfaExample()
+
+	numberExample()
 	return
 
+	dfaExample()
 	timeExample()
 	cmdExample()
 	loggerExample()
@@ -40,6 +42,18 @@ func main() {
 	//wait
 	wg.Add(1)
 	wg.Wait()
+}
+
+//number format
+func numberExample() {
+	nb := util.NewNumber()
+	t1 := time.Now().UnixMicro()
+	info1 := nb.NearestThousandFormat(100)
+	info2 := nb.NearestThousandFormat(2106)
+	info3 := nb.NearestThousandFormat(33456789.12)
+	t2 := time.Now().UnixMicro()
+	fmt.Printf("info1:%v, info2:%v, info3:%v\n", info1, info2, info3)
+	fmt.Printf("time cost:%v\n", t2 - t1)
 }
 
 //dfa example
