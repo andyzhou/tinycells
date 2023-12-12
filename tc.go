@@ -45,8 +45,6 @@ func GetTC() *TinyCells {
 //construct
 func NewTinyCells() *TinyCells {
 	this := &TinyCells{
-		//mq: mq.NewMQ(),
-		wb: web.NewWeb(),
 		db: db.NewDB(),
 		single: sys.NewSignal(),
 		logger: logger.NewLogger(),
@@ -59,8 +57,15 @@ func NewTinyCells() *TinyCells {
 
 //////////////////////////////////////////////
 //setup for first init
-//this should called before use sub instance
+//this called before use sub instance
 //////////////////////////////////////////////
+
+//init web
+func (f *TinyCells) InitWeb() {
+	if f.wb == nil {
+		f.wb = web.NewWeb()
+	}
+}
 
 //setup logger
 func (f *TinyCells) SetUpLogger(params ...interface{}) error {
@@ -87,11 +92,6 @@ func (f *TinyCells) SetupConfig(params ...interface{}) error {
 ///////////////////////
 //get sub instance
 ///////////////////////
-
-////get mq
-//func (f *TinyCells) GetMQ() *mq.MQ {
-//	return f.mq
-//}
 
 //get single
 func (f *TinyCells) GetSingle() *sys.Signal {
